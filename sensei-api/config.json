@@ -1,0 +1,4 @@
+{
+    "connection_string": "root:1234@tcp(127.0.0.1:3306)/sensei?charset=utf8mb4&parseTime=True&loc=Local",
+    "port": 8080
+}
