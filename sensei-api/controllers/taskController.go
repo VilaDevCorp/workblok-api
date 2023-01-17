@@ -35,6 +35,16 @@ func checkIfTaskExists(taskId uuid.UUID) bool {
 	return true
 }
 
+func UpdateTask(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var task, oldTask entities.Task
+	json.NewDecoder(r.Body).Decode(&task)
+	database.Instance.Model(&entities.Task{}).First(&oldTask, task.ID)
+	database.Instance.Model(oldTask).Update("Completed", task.Completed)
+
+	json.NewEncoder(w).Encode(task)
+}
+
 func GetTask(w http.ResponseWriter, r *http.Request) {
 	taskIdStr := mux.Vars(r)["id"]
 	taskId, _ := uuid.FromString(taskIdStr)

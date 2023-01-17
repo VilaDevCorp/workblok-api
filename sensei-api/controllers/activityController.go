@@ -18,7 +18,7 @@ func UpdateActivity(w http.ResponseWriter, r *http.Request) {
 	json.NewDecoder(r.Body).Decode(&activity)
 	database.Instance.Model(&entities.Activity{}).First(&oldActivity, activity.ID)
 
-	database.Instance.Model(oldActivity).Updates(entities.Activity{Name: activity.Name, Size: activity.Size})
+	database.Instance.Model(oldActivity).Updates(entities.Activity{Name: activity.Name, Size: activity.Size, Icon: activity.Icon})
 
 	json.NewEncoder(w).Encode(activity)
 }

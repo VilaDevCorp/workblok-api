@@ -18,6 +18,7 @@ func RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/api/activity/{id}", controllers.DeleteActivity).Methods("DELETE")
 	router.HandleFunc("/api/task", controllers.CreateTask).Methods("POST")
 	router.HandleFunc("/api/task/{id}", controllers.GetTask).Methods("GET")
+	router.HandleFunc("/api/task", controllers.UpdateTask).Methods("PUT")
 	router.HandleFunc("/api/task/{id}", controllers.DeleteTask).Methods("DELETE")
 	router.HandleFunc("/api/user/{id}/tasks/{startDate}", controllers.GetUserTasks).Methods("GET")
 }
@@ -59,6 +60,7 @@ func main() {
 	log.Println("/api/activity (GET)")
 	log.Println("/api/task (POST)")
 	log.Println("/api/task/{id} (GET)")
+	log.Println("/api/task (PUT)")
 	log.Println("/api/task/{id} (DELETE)")
 	log.Println("/api/user/{id}/tasks/{startDate} (GET)")
 	log.Println(fmt.Sprintf("Starting Server on port %s", AppConfig.Port))

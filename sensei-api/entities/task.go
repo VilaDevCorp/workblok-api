@@ -11,6 +11,7 @@ type Task struct {
 	ActivityId   uuid.UUID `json:"activityId"`
 	Activity     Activity  `json:"activity"`
 	DueDate      time.Time `json:"dueDate"`
+	Completed    bool      `json:"completed"`
 	UserId       uuid.UUID `json:"userId"`
 	User         User      `json:"user"`
 	CreationDate time.Time
