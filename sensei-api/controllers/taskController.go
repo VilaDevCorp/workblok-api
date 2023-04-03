@@ -37,10 +37,19 @@ func checkIfTaskExists(taskId uuid.UUID) bool {
 
 func UpdateTask(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
-	var task, oldTask entities.Task
+	var task, oldTask, taskWithActivity entities.Task
 	json.NewDecoder(r.Body).Decode(&task)
+	database.Instance.Model(&entities.Task{}).Preload("Activity").First(&taskWithActivity, task.ID)
 	database.Instance.Model(&entities.Task{}).First(&oldTask, task.ID)
 	database.Instance.Model(oldTask).Update("Completed", task.Completed)
+	if oldTask.Completed != task.Completed {
+		if task.Completed {
+			log.Println(fmt.Sprintf("%s", oldTask.Activity.Name))
+			UpdateUserDansInternal(oldTask.UserId, true, taskWithActivity.Activity.Size)
+		} else {
+			UpdateUserDansInternal(oldTask.UserId, false, taskWithActivity.Activity.Size)
+		}
+	}
 
 	json.NewEncoder(w).Encode(task)
 }

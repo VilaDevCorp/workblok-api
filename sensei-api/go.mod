@@ -3,16 +3,17 @@ module vilacorp.com/sensei
 go 1.18
 
 require (
-	github.com/gorilla/handlers v1.5.1
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/gofrs/uuid v4.4.0+incompatible
 	github.com/gorilla/mux v1.8.0
 	github.com/satori/go.uuid v1.2.0
 	github.com/spf13/viper v1.14.0
+	golang.org/x/crypto v0.0.0-20220525230936-793ad666bf5e
 	gorm.io/driver/mysql v1.4.3
 	gorm.io/gorm v1.24.1
 )
 
 require (
-	github.com/felixge/httpsnoop v1.0.1 // indirect
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/go-sql-driver/mysql v1.6.0 // indirect
 	github.com/hashicorp/hcl v1.0.0 // indirect

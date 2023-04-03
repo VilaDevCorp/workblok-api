@@ -88,3 +88,16 @@ func DeleteActivity(w http.ResponseWriter, r *http.Request) {
 	database.Instance.Delete(&activity, activityId)
 	json.NewEncoder(w).Encode("Activity Deleted Successfully!")
 }
+
+type DeleteBody struct {
+	Ids []string `json:"ids"`
+}
+
+func DeleteActivities(w http.ResponseWriter, r *http.Request) {
+	w.Header().Set("Content-Type", "application/json")
+	var deleteBody DeleteBody
+	json.NewDecoder(r.Body).Decode(&deleteBody)
+	var activity entities.Activity
+	database.Instance.Delete(&activity, deleteBody.Ids)
+	json.NewEncoder(w).Encode("Activities Deleted Successfully!")
+}
