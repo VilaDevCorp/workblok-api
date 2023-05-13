@@ -2,11 +2,12 @@ package utils
 
 import (
 	"errors"
+	"fmt"
+	"sensei/conf"
 	"time"
 
-	"github.com/dgrijalva/jwt-go"
-	uuid "github.com/satori/go.uuid"
-	"vilacorp.com/sensei/config"
+	jwt "github.com/golang-jwt/jwt/v4"
+	"github.com/google/uuid"
 )
 
 type JWTClaim struct {
@@ -14,31 +15,37 @@ type JWTClaim struct {
 	Username string    `json:"username"`
 	Mail     string    `json:"mail"`
 	Csrf     string    `json:"csrf"`
-	jwt.StandardClaims
+	jwt.RegisteredClaims
 }
 
 func GenerateJWT(id string, mail string, username string, csrf string) (tokenString string, err error) {
-	expirationTime := time.Now().Add(6 * time.Hour)
-	uuidId, _ := uuid.FromString(id)
+	conf := conf.Get()
+	expirationTime := time.Now().Add(24 * time.Hour)
+	fmt.Println(expirationTime)
+	fmt.Println(jwt.NewNumericDate(expirationTime))
+	uuidId, _ := uuid.Parse(id)
 	claims := &JWTClaim{
 		Id:       uuidId,
 		Mail:     mail,
 		Username: username,
 		Csrf:     csrf,
-		StandardClaims: jwt.StandardClaims{
-			ExpiresAt: expirationTime.Unix(),
+		RegisteredClaims: jwt.RegisteredClaims{
+			Issuer:    "www.coollocalhost.com",
+			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	tokenString, err = token.SignedString([]byte(config.AppConfig.JwtKey))
+	tokenString, err = token.SignedString([]byte(conf.JwtKey))
 	return
 }
 func ValidateToken(signedToken string) (tokenClaims JWTClaim, err error) {
+	conf := conf.Get()
+
 	token, err := jwt.ParseWithClaims(
 		signedToken,
 		&JWTClaim{},
 		func(token *jwt.Token) (interface{}, error) {
-			return []byte(config.AppConfig.JwtKey), nil
+			return []byte(conf.JwtKey), nil
 		},
 	)
 	if err != nil {
@@ -49,7 +56,7 @@ func ValidateToken(signedToken string) (tokenClaims JWTClaim, err error) {
 		err = errors.New("couldn't parse claims")
 		return
 	}
-	if claims.ExpiresAt < time.Now().Local().Unix() {
+	if int64(claims.ExpiresAt.Compare(time.Now().Local())) <= 0 {
 		err = errors.New("token expired")
 		return
 	}

@@ -3,7 +3,6 @@ package utils
 import (
 	"crypto/rand"
 	"encoding/hex"
-	"fmt"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -28,6 +27,5 @@ func CompareHash(hash string, pass string) bool {
 	byteHash := []byte(hash)
 	bytePass := []byte(pass)
 	err := bcrypt.CompareHashAndPassword(byteHash, bytePass)
-	fmt.Println(err)
 	return err == nil
 }

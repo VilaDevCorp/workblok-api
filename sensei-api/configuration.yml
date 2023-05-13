@@ -1,0 +1,9 @@
+IP: www.coollocalhost.com
+Port: 8080
+JwtKey: sEnSeI258SECRETkey
+DB: 
+  Host: localhost
+  Port: 3306
+  User: root
+  Pass: 1234
+  DB: sensei
