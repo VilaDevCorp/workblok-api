@@ -24,3 +24,8 @@ type SearchForm struct {
 	Page      int         `json:"page"`
 	PageSize  int         `json:"pageSize"`
 }
+
+type CompleteForm struct {
+	TaskIds     []uuid.UUID `json:"taskIds" binding:"required"`
+	IsCompleted bool        `json:"isCompleted"`
+}

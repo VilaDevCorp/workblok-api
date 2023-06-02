@@ -21,6 +21,7 @@ func (Activity) Mixin() []ent.Mixin {
 func (Activity) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").NotEmpty(),
+		field.String("description"),
 		field.String("icon"),
 		field.Int("size").Default(1),
 	}

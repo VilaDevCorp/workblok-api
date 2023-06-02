@@ -5,7 +5,6 @@ import (
 	"sensei/svc"
 	"sensei/svc/task"
 	"sensei/utils"
-	"strconv"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
@@ -107,22 +106,15 @@ func Delete(c *gin.Context) {
 }
 
 func Complete(c *gin.Context) {
-	unparsedId, _ := c.Params.Get("id")
-	unparsedIsComplete := c.DefaultQuery("isCompleted", "true")
-	parsedId, err := uuid.Parse(unparsedId)
+	var form task.CompleteForm
+	err := c.ShouldBind(&form)
 	if err != nil {
-		res := utils.BadRequest(unparsedId, err)
-		c.AbortWithStatusJSON(res.Status, res.Result)
-		return
-	}
-	parsedIsComplete, err := strconv.ParseBool(unparsedIsComplete)
-	if err != nil {
-		res := utils.BadRequest(unparsedIsComplete, err)
+		res := utils.BadRequest(form, err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
 	svc := svc.Get()
-	status, err := svc.Task.Complete(c.Request.Context(), parsedId, parsedIsComplete)
+	status, err := svc.Task.Complete(c.Request.Context(), form.TaskIds, form.IsCompleted)
 	if status == http.StatusInternalServerError {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -134,11 +126,11 @@ func Complete(c *gin.Context) {
 		return
 	}
 	result := struct {
-		id         uuid.UUID
+		id         []uuid.UUID
 		isComplete bool
 	}{
-		id:         parsedId,
-		isComplete: parsedIsComplete,
+		id:         form.TaskIds,
+		isComplete: form.IsCompleted,
 	}
 	res := utils.OkOperation(result)
 	c.JSON(res.Status, res.Result)

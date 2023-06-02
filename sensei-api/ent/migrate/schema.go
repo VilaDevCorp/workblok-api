@@ -13,6 +13,7 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "creation_date", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString},
 		{Name: "icon", Type: field.TypeString},
 		{Name: "size", Type: field.TypeInt, Default: 1},
 		{Name: "user_activities", Type: field.TypeUUID},
@@ -25,7 +26,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "activities_users_activities",
-				Columns:    []*schema.Column{ActivitiesColumns[5]},
+				Columns:    []*schema.Column{ActivitiesColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

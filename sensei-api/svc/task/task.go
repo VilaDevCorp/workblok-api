@@ -2,6 +2,7 @@ package task
 
 import (
 	"context"
+	"fmt"
 	"math"
 	"net/http"
 	"sensei/ent"
@@ -20,7 +21,7 @@ type Svc interface {
 	Search(ctx context.Context, form SearchForm) (*utils.Page, error)
 	Get(ctx context.Context, taskId uuid.UUID) (*ent.Task, error)
 	Delete(ctx context.Context, taskId uuid.UUID) error
-	Complete(ctx context.Context, taskId uuid.UUID, isComplete bool) (int, error)
+	Complete(ctx context.Context, taskIds []uuid.UUID, isComplete bool) (int, error)
 }
 
 type Store struct {
@@ -44,7 +45,7 @@ func (s *Store) Get(ctx context.Context, taskId uuid.UUID) (*ent.Task, error) {
 }
 
 func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error) {
-	query := s.DB.Task.Query()
+	query := s.DB.Task.Query().WithActivity()
 	var conditions []predicate.Task
 
 	offset := 0
@@ -83,42 +84,38 @@ func (s *Store) Delete(ctx context.Context, taskId uuid.UUID) error {
 	return err
 }
 
-func (s *Store) Complete(ctx context.Context, taskId uuid.UUID, isComplete bool) (int, error) {
+func (s *Store) Complete(ctx context.Context, taskIds []uuid.UUID, isComplete bool) (int, error) {
 	tx, err := s.DB.Tx(ctx)
 	if err != nil {
 		return http.StatusInternalServerError, err
 	}
-	oldTask, err := tx.Task.Get(ctx, taskId)
+	sumDans := 0
+	tasks, err := tx.Task.Query().Where(task.IDIn(taskIds...)).WithActivity().WithUser().All(ctx)
 	if err != nil {
 		tx.Rollback()
 		return http.StatusInternalServerError, err
 	}
-	if isComplete == oldTask.Completed {
-		return http.StatusConflict, nil
-	}
-	updateTask := tx.Task.UpdateOneID(taskId)
 
-	updateTask.SetCompleted(isComplete)
-	task, err := updateTask.Save(ctx)
+	for _, task := range tasks {
+		if isComplete == task.Completed {
+			continue
+		}
+		fmt.Print(task.Edges.Activity)
+		sumDans += task.Edges.Activity.Size
+	}
+
+	_, err = tx.Task.Update().Where(task.IDIn(taskIds...)).SetCompleted(isComplete).Save(ctx)
 	if err != nil {
 		tx.Rollback()
 		return http.StatusInternalServerError, err
 	}
-	user, err := tx.Task.QueryUser(task).Only(ctx)
-	if err != nil {
-		tx.Rollback()
-		return http.StatusInternalServerError, err
-	}
-	updateUser := tx.User.UpdateOneID(user.ID)
-	taskActivity, err := tx.Task.QueryActivity(task).Only(ctx)
-	if err != nil {
-		tx.Rollback()
-		return http.StatusInternalServerError, err
-	}
+	userId := tasks[0].Edges.User.ID
+	oldDansValue := tasks[0].Edges.User.Dans
+	updateUser := tx.User.UpdateOneID(userId)
 	if isComplete {
-		updateUser.SetDans(user.Dans + taskActivity.Size)
+		updateUser.SetDans(oldDansValue + sumDans)
 	} else {
-		updateUser.SetDans(user.Dans - taskActivity.Size)
+		updateUser.SetDans(oldDansValue - sumDans)
 	}
 	_, err = updateUser.Save(ctx)
 	if err != nil {

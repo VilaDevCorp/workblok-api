@@ -16,7 +16,7 @@ type Svc interface {
 	Update(ctx context.Context, form UpdateForm) (*ent.Activity, error)
 	Search(ctx context.Context, form SearchForm) (*utils.Page, error)
 	Get(ctx context.Context, activityId uuid.UUID) (*ent.Activity, error)
-	Delete(ctx context.Context, activityId uuid.UUID) error
+	Delete(ctx context.Context, activityId []uuid.UUID) error
 }
 
 type Store struct {
@@ -24,13 +24,16 @@ type Store struct {
 }
 
 func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.Activity, error) {
-	return s.DB.Activity.Create().SetName(form.Name).SetIcon(form.Icon).SetSize(form.Size).SetUserID(form.UserId).Save(ctx)
+	return s.DB.Activity.Create().SetName(form.Name).SetDescription(form.Description).SetIcon(form.Icon).SetSize(form.Size).SetUserID(form.UserId).Save(ctx)
 }
 
 func (s *Store) Update(ctx context.Context, form UpdateForm) (*ent.Activity, error) {
 	update := s.DB.Activity.UpdateOneID(form.Id)
 	if form.Name != nil {
 		update.SetName(*form.Name)
+	}
+	if form.Name != nil {
+		update.SetDescription(*form.Description)
 	}
 	if form.Icon != nil {
 		update.SetIcon(*form.Icon)
@@ -75,7 +78,7 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	return &page, err
 }
 
-func (s *Store) Delete(ctx context.Context, activityId uuid.UUID) error {
-	err := s.DB.Activity.DeleteOneID(activityId).Exec(ctx)
+func (s *Store) Delete(ctx context.Context, activityIds []uuid.UUID) error {
+	_, err := s.DB.Activity.Delete().Where(activity.IDIn(activityIds...)).Exec(ctx)
 	return err
 }

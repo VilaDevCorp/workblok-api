@@ -40,6 +40,7 @@ type ActivityMutation struct {
 	id            *uuid.UUID
 	creationDate  *time.Time
 	name          *string
+	description   *string
 	icon          *string
 	size          *int
 	addsize       *int
@@ -228,6 +229,42 @@ func (m *ActivityMutation) OldName(ctx context.Context) (v string, err error) {
 // ResetName resets all changes to the "name" field.
 func (m *ActivityMutation) ResetName() {
 	m.name = nil
+}
+
+// SetDescription sets the "description" field.
+func (m *ActivityMutation) SetDescription(s string) {
+	m.description = &s
+}
+
+// Description returns the value of the "description" field in the mutation.
+func (m *ActivityMutation) Description() (r string, exists bool) {
+	v := m.description
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldDescription returns the old "description" field's value of the Activity entity.
+// If the Activity object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *ActivityMutation) OldDescription(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldDescription is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldDescription requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldDescription: %w", err)
+	}
+	return oldValue.Description, nil
+}
+
+// ResetDescription resets all changes to the "description" field.
+func (m *ActivityMutation) ResetDescription() {
+	m.description = nil
 }
 
 // SetIcon sets the "icon" field.
@@ -449,12 +486,15 @@ func (m *ActivityMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *ActivityMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.creationDate != nil {
 		fields = append(fields, activity.FieldCreationDate)
 	}
 	if m.name != nil {
 		fields = append(fields, activity.FieldName)
+	}
+	if m.description != nil {
+		fields = append(fields, activity.FieldDescription)
 	}
 	if m.icon != nil {
 		fields = append(fields, activity.FieldIcon)
@@ -474,6 +514,8 @@ func (m *ActivityMutation) Field(name string) (ent.Value, bool) {
 		return m.CreationDate()
 	case activity.FieldName:
 		return m.Name()
+	case activity.FieldDescription:
+		return m.Description()
 	case activity.FieldIcon:
 		return m.Icon()
 	case activity.FieldSize:
@@ -491,6 +533,8 @@ func (m *ActivityMutation) OldField(ctx context.Context, name string) (ent.Value
 		return m.OldCreationDate(ctx)
 	case activity.FieldName:
 		return m.OldName(ctx)
+	case activity.FieldDescription:
+		return m.OldDescription(ctx)
 	case activity.FieldIcon:
 		return m.OldIcon(ctx)
 	case activity.FieldSize:
@@ -517,6 +561,13 @@ func (m *ActivityMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetName(v)
+		return nil
+	case activity.FieldDescription:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetDescription(v)
 		return nil
 	case activity.FieldIcon:
 		v, ok := value.(string)
@@ -601,6 +652,9 @@ func (m *ActivityMutation) ResetField(name string) error {
 		return nil
 	case activity.FieldName:
 		m.ResetName()
+		return nil
+	case activity.FieldDescription:
+		m.ResetDescription()
 		return nil
 	case activity.FieldIcon:
 		m.ResetIcon()

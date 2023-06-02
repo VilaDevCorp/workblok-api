@@ -23,6 +23,8 @@ type Activity struct {
 	CreationDate time.Time `json:"creationDate,omitempty"`
 	// Name holds the value of the "name" field.
 	Name string `json:"name,omitempty"`
+	// Description holds the value of the "description" field.
+	Description string `json:"description,omitempty"`
 	// Icon holds the value of the "icon" field.
 	Icon string `json:"icon,omitempty"`
 	// Size holds the value of the "size" field.
@@ -74,7 +76,7 @@ func (*Activity) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case activity.FieldSize:
 			values[i] = new(sql.NullInt64)
-		case activity.FieldName, activity.FieldIcon:
+		case activity.FieldName, activity.FieldDescription, activity.FieldIcon:
 			values[i] = new(sql.NullString)
 		case activity.FieldCreationDate:
 			values[i] = new(sql.NullTime)
@@ -114,6 +116,12 @@ func (a *Activity) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field name", values[i])
 			} else if value.Valid {
 				a.Name = value.String
+			}
+		case activity.FieldDescription:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field description", values[i])
+			} else if value.Valid {
+				a.Description = value.String
 			}
 		case activity.FieldIcon:
 			if value, ok := values[i].(*sql.NullString); !ok {
@@ -185,6 +193,9 @@ func (a *Activity) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("name=")
 	builder.WriteString(a.Name)
+	builder.WriteString(", ")
+	builder.WriteString("description=")
+	builder.WriteString(a.Description)
 	builder.WriteString(", ")
 	builder.WriteString("icon=")
 	builder.WriteString(a.Icon)

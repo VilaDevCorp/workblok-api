@@ -19,6 +19,8 @@ const (
 	FieldCreationDate = "creation_date"
 	// FieldName holds the string denoting the name field in the database.
 	FieldName = "name"
+	// FieldDescription holds the string denoting the description field in the database.
+	FieldDescription = "description"
 	// FieldIcon holds the string denoting the icon field in the database.
 	FieldIcon = "icon"
 	// FieldSize holds the string denoting the size field in the database.
@@ -50,6 +52,7 @@ var Columns = []string{
 	FieldID,
 	FieldCreationDate,
 	FieldName,
+	FieldDescription,
 	FieldIcon,
 	FieldSize,
 }
@@ -102,6 +105,11 @@ func ByCreationDate(opts ...sql.OrderTermOption) OrderOption {
 // ByName orders the results by the name field.
 func ByName(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldName, opts...).ToFunc()
+}
+
+// ByDescription orders the results by the description field.
+func ByDescription(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldDescription, opts...).ToFunc()
 }
 
 // ByIcon orders the results by the icon field.

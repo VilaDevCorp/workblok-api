@@ -1,7 +1,7 @@
 package utils
 
 type Page struct {
-	TotalPages int
-	TotalRows  int
-	Content    interface{}
+	TotalPages int         `json:"totalPages"`
+	TotalRows  int         `json:"totalRows"`
+	Content    interface{} `json:"content"`
 }

@@ -36,6 +36,12 @@ func (au *ActivityUpdate) SetName(s string) *ActivityUpdate {
 	return au
 }
 
+// SetDescription sets the "description" field.
+func (au *ActivityUpdate) SetDescription(s string) *ActivityUpdate {
+	au.mutation.SetDescription(s)
+	return au
+}
+
 // SetIcon sets the "icon" field.
 func (au *ActivityUpdate) SetIcon(s string) *ActivityUpdate {
 	au.mutation.SetIcon(s)
@@ -176,6 +182,9 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.Name(); ok {
 		_spec.SetField(activity.FieldName, field.TypeString, value)
 	}
+	if value, ok := au.mutation.Description(); ok {
+		_spec.SetField(activity.FieldDescription, field.TypeString, value)
+	}
 	if value, ok := au.mutation.Icon(); ok {
 		_spec.SetField(activity.FieldIcon, field.TypeString, value)
 	}
@@ -282,6 +291,12 @@ type ActivityUpdateOne struct {
 // SetName sets the "name" field.
 func (auo *ActivityUpdateOne) SetName(s string) *ActivityUpdateOne {
 	auo.mutation.SetName(s)
+	return auo
+}
+
+// SetDescription sets the "description" field.
+func (auo *ActivityUpdateOne) SetDescription(s string) *ActivityUpdateOne {
+	auo.mutation.SetDescription(s)
 	return auo
 }
 
@@ -454,6 +469,9 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	}
 	if value, ok := auo.mutation.Name(); ok {
 		_spec.SetField(activity.FieldName, field.TypeString, value)
+	}
+	if value, ok := auo.mutation.Description(); ok {
+		_spec.SetField(activity.FieldDescription, field.TypeString, value)
 	}
 	if value, ok := auo.mutation.Icon(); ok {
 		_spec.SetField(activity.FieldIcon, field.TypeString, value)

@@ -88,15 +88,18 @@ func Search(c *gin.Context) {
 }
 
 func Delete(c *gin.Context) {
-	unparsedId, _ := c.Params.Get("id")
-	parsedId, err := uuid.Parse(unparsedId)
+	var form activity.DeleteForm
+	err := c.ShouldBind(&form)
+
 	if err != nil {
-		res := utils.BadRequest(unparsedId, err)
+		res := utils.BadRequest(form, err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
+	activityIds := form.ActivityIds
+
 	svc := svc.Get()
-	err = svc.Activity.Delete(c.Request.Context(), parsedId)
+	err = svc.Activity.Delete(c.Request.Context(), activityIds)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)

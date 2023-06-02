@@ -30,7 +30,7 @@ func init() {
 	// activity.NameValidator is a validator for the "name" field. It is called by the builders before save.
 	activity.NameValidator = activityDescName.Validators[0].(func(string) error)
 	// activityDescSize is the schema descriptor for size field.
-	activityDescSize := activityFields[2].Descriptor()
+	activityDescSize := activityFields[3].Descriptor()
 	// activity.DefaultSize holds the default value on creation for the size field.
 	activity.DefaultSize = activityDescSize.Default.(int)
 	// activityDescID is the schema descriptor for id field.

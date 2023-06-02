@@ -6,9 +6,9 @@ import (
 )
 
 type ResponseResult struct {
-	Message string
-	Obj     interface{}
-	Err     error
+	Message string      `json:"message"`
+	Obj     interface{} `json:"obj"`
+	Err     error       `json:"err"`
 }
 
 type HttpResponse struct {
@@ -62,5 +62,5 @@ func Unauthorized(cause string) HttpResponse {
 }
 
 func TaskAlreadyCompleted() HttpResponse {
-	return HttpResponse{Status: http.StatusConflict, Result: ResponseResult{Message: "Task has already been completed/uncompleted"}}
+	return HttpResponse{Status: http.StatusConflict, Result: ResponseResult{Message: "Some tasks has already been completed/uncompleted"}}
 }

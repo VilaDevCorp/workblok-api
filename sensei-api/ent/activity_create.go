@@ -43,6 +43,12 @@ func (ac *ActivityCreate) SetName(s string) *ActivityCreate {
 	return ac
 }
 
+// SetDescription sets the "description" field.
+func (ac *ActivityCreate) SetDescription(s string) *ActivityCreate {
+	ac.mutation.SetDescription(s)
+	return ac
+}
+
 // SetIcon sets the "icon" field.
 func (ac *ActivityCreate) SetIcon(s string) *ActivityCreate {
 	ac.mutation.SetIcon(s)
@@ -165,6 +171,9 @@ func (ac *ActivityCreate) check() error {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Activity.name": %w`, err)}
 		}
 	}
+	if _, ok := ac.mutation.Description(); !ok {
+		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Activity.description"`)}
+	}
 	if _, ok := ac.mutation.Icon(); !ok {
 		return &ValidationError{Name: "icon", err: errors.New(`ent: missing required field "Activity.icon"`)}
 	}
@@ -216,6 +225,10 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 	if value, ok := ac.mutation.Name(); ok {
 		_spec.SetField(activity.FieldName, field.TypeString, value)
 		_node.Name = value
+	}
+	if value, ok := ac.mutation.Description(); ok {
+		_spec.SetField(activity.FieldDescription, field.TypeString, value)
+		_node.Description = value
 	}
 	if value, ok := ac.mutation.Icon(); ok {
 		_spec.SetField(activity.FieldIcon, field.TypeString, value)
