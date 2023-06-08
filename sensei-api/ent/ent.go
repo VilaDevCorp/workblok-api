@@ -10,6 +10,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/task"
 	"sensei/ent/user"
+	"sensei/ent/verificationcode"
 	"sync"
 
 	"entgo.io/ent"
@@ -75,9 +76,10 @@ var (
 func checkColumn(table, column string) error {
 	initCheck.Do(func() {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
-			activity.Table: activity.ValidColumn,
-			task.Table:     task.ValidColumn,
-			user.Table:     user.ValidColumn,
+			activity.Table:         activity.ValidColumn,
+			task.Table:             task.ValidColumn,
+			user.Table:             user.ValidColumn,
+			verificationcode.Table: verificationcode.ValidColumn,
 		})
 	})
 	return columnCheck(table, column)

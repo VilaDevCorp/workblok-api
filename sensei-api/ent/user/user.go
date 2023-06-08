@@ -25,8 +25,12 @@ const (
 	FieldPassword = "password"
 	// FieldDans holds the string denoting the dans field in the database.
 	FieldDans = "dans"
+	// FieldMailValid holds the string denoting the mailvalid field in the database.
+	FieldMailValid = "mail_valid"
 	// EdgeActivities holds the string denoting the activities edge name in mutations.
 	EdgeActivities = "activities"
+	// EdgeCodes holds the string denoting the codes edge name in mutations.
+	EdgeCodes = "codes"
 	// EdgeTasks holds the string denoting the tasks edge name in mutations.
 	EdgeTasks = "tasks"
 	// Table holds the table name of the user in the database.
@@ -38,6 +42,13 @@ const (
 	ActivitiesInverseTable = "activities"
 	// ActivitiesColumn is the table column denoting the activities relation/edge.
 	ActivitiesColumn = "user_activities"
+	// CodesTable is the table that holds the codes relation/edge.
+	CodesTable = "verification_codes"
+	// CodesInverseTable is the table name for the VerificationCode entity.
+	// It exists in this package in order to avoid circular dependency with the "verificationcode" package.
+	CodesInverseTable = "verification_codes"
+	// CodesColumn is the table column denoting the codes relation/edge.
+	CodesColumn = "user_codes"
 	// TasksTable is the table that holds the tasks relation/edge.
 	TasksTable = "tasks"
 	// TasksInverseTable is the table name for the Task entity.
@@ -55,6 +66,7 @@ var Columns = []string{
 	FieldMail,
 	FieldPassword,
 	FieldDans,
+	FieldMailValid,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -78,6 +90,8 @@ var (
 	PasswordValidator func(string) error
 	// DefaultDans holds the default value on creation for the "Dans" field.
 	DefaultDans int
+	// DefaultMailValid holds the default value on creation for the "MailValid" field.
+	DefaultMailValid bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -115,6 +129,11 @@ func ByDans(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDans, opts...).ToFunc()
 }
 
+// ByMailValid orders the results by the MailValid field.
+func ByMailValid(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldMailValid, opts...).ToFunc()
+}
+
 // ByActivitiesCount orders the results by activities count.
 func ByActivitiesCount(opts ...sql.OrderTermOption) OrderOption {
 	return func(s *sql.Selector) {
@@ -126,6 +145,20 @@ func ByActivitiesCount(opts ...sql.OrderTermOption) OrderOption {
 func ByActivities(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
 	return func(s *sql.Selector) {
 		sqlgraph.OrderByNeighborTerms(s, newActivitiesStep(), append([]sql.OrderTerm{term}, terms...)...)
+	}
+}
+
+// ByCodesCount orders the results by codes count.
+func ByCodesCount(opts ...sql.OrderTermOption) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborsCount(s, newCodesStep(), opts...)
+	}
+}
+
+// ByCodes orders the results by codes terms.
+func ByCodes(term sql.OrderTerm, terms ...sql.OrderTerm) OrderOption {
+	return func(s *sql.Selector) {
+		sqlgraph.OrderByNeighborTerms(s, newCodesStep(), append([]sql.OrderTerm{term}, terms...)...)
 	}
 }
 
@@ -147,6 +180,13 @@ func newActivitiesStep() *sqlgraph.Step {
 		sqlgraph.From(Table, FieldID),
 		sqlgraph.To(ActivitiesInverseTable, FieldID),
 		sqlgraph.Edge(sqlgraph.O2M, false, ActivitiesTable, ActivitiesColumn),
+	)
+}
+func newCodesStep() *sqlgraph.Step {
+	return sqlgraph.NewStep(
+		sqlgraph.From(Table, FieldID),
+		sqlgraph.To(CodesInverseTable, FieldID),
+		sqlgraph.Edge(sqlgraph.O2M, false, CodesTable, CodesColumn),
 	)
 }
 func newTasksStep() *sqlgraph.Step {

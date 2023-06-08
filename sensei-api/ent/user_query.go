@@ -11,6 +11,7 @@ import (
 	"sensei/ent/predicate"
 	"sensei/ent/task"
 	"sensei/ent/user"
+	"sensei/ent/verificationcode"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -26,6 +27,7 @@ type UserQuery struct {
 	inters         []Interceptor
 	predicates     []predicate.User
 	withActivities *ActivityQuery
+	withCodes      *VerificationCodeQuery
 	withTasks      *TaskQuery
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
@@ -78,6 +80,28 @@ func (uq *UserQuery) QueryActivities() *ActivityQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(activity.Table, activity.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ActivitiesTable, user.ActivitiesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryCodes chains the current query on the "codes" edge.
+func (uq *UserQuery) QueryCodes() *VerificationCodeQuery {
+	query := (&VerificationCodeClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(verificationcode.Table, verificationcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CodesTable, user.CodesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -300,6 +324,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		inters:         append([]Interceptor{}, uq.inters...),
 		predicates:     append([]predicate.User{}, uq.predicates...),
 		withActivities: uq.withActivities.Clone(),
+		withCodes:      uq.withCodes.Clone(),
 		withTasks:      uq.withTasks.Clone(),
 		// clone intermediate query.
 		sql:  uq.sql.Clone(),
@@ -315,6 +340,17 @@ func (uq *UserQuery) WithActivities(opts ...func(*ActivityQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withActivities = query
+	return uq
+}
+
+// WithCodes tells the query-builder to eager-load the nodes that are connected to
+// the "codes" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithCodes(opts ...func(*VerificationCodeQuery)) *UserQuery {
+	query := (&VerificationCodeClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withCodes = query
 	return uq
 }
 
@@ -407,8 +443,9 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			uq.withActivities != nil,
+			uq.withCodes != nil,
 			uq.withTasks != nil,
 		}
 	)
@@ -434,6 +471,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadActivities(ctx, query, nodes,
 			func(n *User) { n.Edges.Activities = []*Activity{} },
 			func(n *User, e *Activity) { n.Edges.Activities = append(n.Edges.Activities, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withCodes; query != nil {
+		if err := uq.loadCodes(ctx, query, nodes,
+			func(n *User) { n.Edges.Codes = []*VerificationCode{} },
+			func(n *User, e *VerificationCode) { n.Edges.Codes = append(n.Edges.Codes, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -473,6 +517,37 @@ func (uq *UserQuery) loadActivities(ctx context.Context, query *ActivityQuery, n
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_activities" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadCodes(ctx context.Context, query *VerificationCodeQuery, nodes []*User, init func(*User), assign func(*User, *VerificationCode)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.VerificationCode(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.CodesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_codes
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_codes" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_codes" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

@@ -6,13 +6,15 @@ import (
 	"sensei/svc/auth"
 	"sensei/svc/task"
 	"sensei/svc/user"
+	"sensei/svc/verificationCode"
 )
 
 type Service struct {
-	Activity activity.Svc
-	Task     task.Svc
-	User     user.Svc
-	Auth     auth.Svc
+	Activity         activity.Svc
+	Task             task.Svc
+	User             user.Svc
+	Auth             auth.Svc
+	VerificationCode verificationCode.Svc
 }
 
 var svc Service
@@ -24,9 +26,10 @@ func Get() *Service {
 func Setup() {
 	client := db.GetClient()
 	svc = Service{
-		Activity: &activity.Store{DB: client},
-		Task:     &task.Store{DB: client},
-		User:     &user.Store{DB: client},
-		Auth:     &auth.Store{DB: client},
+		Activity:         &activity.Store{DB: client},
+		Task:             &task.Store{DB: client},
+		User:             &user.Store{DB: client},
+		Auth:             &auth.Store{DB: client},
+		VerificationCode: &verificationCode.Store{DB: client},
 	}
 }

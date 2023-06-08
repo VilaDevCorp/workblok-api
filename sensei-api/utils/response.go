@@ -9,11 +9,12 @@ type ResponseResult struct {
 	Message string      `json:"message"`
 	Obj     interface{} `json:"obj"`
 	Err     error       `json:"err"`
+	ErrCode string      `json:"errCode"`
 }
 
 type HttpResponse struct {
-	Status int
-	Result ResponseResult
+	Status int            `json:"status"`
+	Result ResponseResult `json:"result"`
 }
 
 func OkOperation(result interface{}) HttpResponse {
@@ -45,7 +46,7 @@ func BadRequest(result interface{}, err error) HttpResponse {
 }
 
 func NotFoundEntity(id string) HttpResponse {
-	return HttpResponse{Status: http.StatusBadRequest, Result: ResponseResult{Message: "Entity wasnt found", Obj: id, Err: nil}}
+	return HttpResponse{Status: http.StatusNotFound, Result: ResponseResult{Message: "Entity wasnt found", Obj: id, Err: nil}}
 }
 
 func InternalError(err error) HttpResponse {
@@ -57,10 +58,18 @@ func Forbidden(cause string, err error) HttpResponse {
 	return HttpResponse{Status: http.StatusForbidden, Result: ResponseResult{Message: fmt.Sprintf("You dont have permission for this operation: %s", cause), Err: err}}
 }
 
-func Unauthorized(cause string) HttpResponse {
-	return HttpResponse{Status: http.StatusUnauthorized, Result: ResponseResult{Message: fmt.Sprintf("Unauthorized user: %s", cause)}}
+func Unauthorized(cause string, errCode string) HttpResponse {
+	return HttpResponse{Status: http.StatusUnauthorized, Result: ResponseResult{Message: fmt.Sprintf("Unauthorized user: %s", cause), ErrCode: errCode}}
 }
 
 func TaskAlreadyCompleted() HttpResponse {
 	return HttpResponse{Status: http.StatusConflict, Result: ResponseResult{Message: "Some tasks has already been completed/uncompleted"}}
+}
+
+func VerificationCodeNotMatch() HttpResponse {
+	return HttpResponse{Status: http.StatusUnauthorized, Result: ResponseResult{Message: "The verification code you sent is not correct"}}
+}
+
+func ExpiredCode() HttpResponse {
+	return HttpResponse{Status: http.StatusGone, Result: ResponseResult{Message: "The verification code has expired"}}
 }

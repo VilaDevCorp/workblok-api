@@ -9,6 +9,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/task"
 	"sensei/ent/user"
+	"sensei/ent/verificationcode"
 	"time"
 
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -69,6 +70,20 @@ func (uc *UserCreate) SetNillableDans(i *int) *UserCreate {
 	return uc
 }
 
+// SetMailValid sets the "MailValid" field.
+func (uc *UserCreate) SetMailValid(b bool) *UserCreate {
+	uc.mutation.SetMailValid(b)
+	return uc
+}
+
+// SetNillableMailValid sets the "MailValid" field if the given value is not nil.
+func (uc *UserCreate) SetNillableMailValid(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetMailValid(*b)
+	}
+	return uc
+}
+
 // SetID sets the "id" field.
 func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	uc.mutation.SetID(u)
@@ -96,6 +111,21 @@ func (uc *UserCreate) AddActivities(a ...*Activity) *UserCreate {
 		ids[i] = a[i].ID
 	}
 	return uc.AddActivityIDs(ids...)
+}
+
+// AddCodeIDs adds the "codes" edge to the VerificationCode entity by IDs.
+func (uc *UserCreate) AddCodeIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddCodeIDs(ids...)
+	return uc
+}
+
+// AddCodes adds the "codes" edges to the VerificationCode entity.
+func (uc *UserCreate) AddCodes(v ...*VerificationCode) *UserCreate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return uc.AddCodeIDs(ids...)
 }
 
 // AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
@@ -156,6 +186,10 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultDans
 		uc.mutation.SetDans(v)
 	}
+	if _, ok := uc.mutation.MailValid(); !ok {
+		v := user.DefaultMailValid
+		uc.mutation.SetMailValid(v)
+	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
@@ -193,6 +227,9 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.Dans(); !ok {
 		return &ValidationError{Name: "Dans", err: errors.New(`ent: missing required field "User.Dans"`)}
+	}
+	if _, ok := uc.mutation.MailValid(); !ok {
+		return &ValidationError{Name: "MailValid", err: errors.New(`ent: missing required field "User.MailValid"`)}
 	}
 	return nil
 }
@@ -249,6 +286,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 		_spec.SetField(user.FieldDans, field.TypeInt, value)
 		_node.Dans = value
 	}
+	if value, ok := uc.mutation.MailValid(); ok {
+		_spec.SetField(user.FieldMailValid, field.TypeBool, value)
+		_node.MailValid = value
+	}
 	if nodes := uc.mutation.ActivitiesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -258,6 +299,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.CodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

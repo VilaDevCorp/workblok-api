@@ -13,6 +13,7 @@ type Conf struct {
 	IP     string
 	Port   string
 	DB     DatabaseConf
+	Mail   MailConf
 	JwtKey string
 }
 
@@ -22,6 +23,13 @@ type DatabaseConf struct {
 	User string
 	Pass string
 	DB   string
+}
+
+type MailConf struct {
+	User     string
+	Pass     string
+	SmtpHost string
+	SmtpPort string
 }
 
 var conf Conf

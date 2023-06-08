@@ -1,6 +1,12 @@
 package auth
 
 type LoginForm struct {
-	Username string `json:"username"`
-	Password string `json:"password"`
+	Mail     string `json:"mail" binding:"required"`
+	Password string `json:"password" binding:"required"`
+}
+
+type SignUpForm struct {
+	UserName string `json:"username" binding:"required"`
+	Mail     string `json:"mail" binding:"required"`
+	Password string `json:"password" binding:"required"`
 }

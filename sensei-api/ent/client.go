@@ -13,6 +13,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/task"
 	"sensei/ent/user"
+	"sensei/ent/verificationcode"
 
 	"entgo.io/ent"
 	"entgo.io/ent/dialect"
@@ -32,6 +33,8 @@ type Client struct {
 	Task *TaskClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
+	// VerificationCode is the client for interacting with the VerificationCode builders.
+	VerificationCode *VerificationCodeClient
 }
 
 // NewClient creates a new client configured with the given options.
@@ -48,6 +51,7 @@ func (c *Client) init() {
 	c.Activity = NewActivityClient(c.config)
 	c.Task = NewTaskClient(c.config)
 	c.User = NewUserClient(c.config)
+	c.VerificationCode = NewVerificationCodeClient(c.config)
 }
 
 type (
@@ -128,11 +132,12 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 	cfg := c.config
 	cfg.driver = tx
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Activity: NewActivityClient(cfg),
-		Task:     NewTaskClient(cfg),
-		User:     NewUserClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Activity:         NewActivityClient(cfg),
+		Task:             NewTaskClient(cfg),
+		User:             NewUserClient(cfg),
+		VerificationCode: NewVerificationCodeClient(cfg),
 	}, nil
 }
 
@@ -150,11 +155,12 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 	cfg := c.config
 	cfg.driver = &txDriver{tx: tx, drv: c.driver}
 	return &Tx{
-		ctx:      ctx,
-		config:   cfg,
-		Activity: NewActivityClient(cfg),
-		Task:     NewTaskClient(cfg),
-		User:     NewUserClient(cfg),
+		ctx:              ctx,
+		config:           cfg,
+		Activity:         NewActivityClient(cfg),
+		Task:             NewTaskClient(cfg),
+		User:             NewUserClient(cfg),
+		VerificationCode: NewVerificationCodeClient(cfg),
 	}, nil
 }
 
@@ -186,6 +192,7 @@ func (c *Client) Use(hooks ...Hook) {
 	c.Activity.Use(hooks...)
 	c.Task.Use(hooks...)
 	c.User.Use(hooks...)
+	c.VerificationCode.Use(hooks...)
 }
 
 // Intercept adds the query interceptors to all the entity clients.
@@ -194,6 +201,7 @@ func (c *Client) Intercept(interceptors ...Interceptor) {
 	c.Activity.Intercept(interceptors...)
 	c.Task.Intercept(interceptors...)
 	c.User.Intercept(interceptors...)
+	c.VerificationCode.Intercept(interceptors...)
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -205,6 +213,8 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Task.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
+	case *VerificationCodeMutation:
+		return c.VerificationCode.mutate(ctx, m)
 	default:
 		return nil, fmt.Errorf("ent: unknown mutation type %T", m)
 	}
@@ -619,6 +629,22 @@ func (c *UserClient) QueryActivities(u *User) *ActivityQuery {
 	return query
 }
 
+// QueryCodes queries the codes edge of a User.
+func (c *UserClient) QueryCodes(u *User) *VerificationCodeQuery {
+	query := (&VerificationCodeClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(verificationcode.Table, verificationcode.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.CodesTable, user.CodesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
 // QueryTasks queries the tasks edge of a User.
 func (c *UserClient) QueryTasks(u *User) *TaskQuery {
 	query := (&TaskClient{config: c.config}).Query()
@@ -660,12 +686,146 @@ func (c *UserClient) mutate(ctx context.Context, m *UserMutation) (Value, error)
 	}
 }
 
+// VerificationCodeClient is a client for the VerificationCode schema.
+type VerificationCodeClient struct {
+	config
+}
+
+// NewVerificationCodeClient returns a client for the VerificationCode from the given config.
+func NewVerificationCodeClient(c config) *VerificationCodeClient {
+	return &VerificationCodeClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `verificationcode.Hooks(f(g(h())))`.
+func (c *VerificationCodeClient) Use(hooks ...Hook) {
+	c.hooks.VerificationCode = append(c.hooks.VerificationCode, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `verificationcode.Intercept(f(g(h())))`.
+func (c *VerificationCodeClient) Intercept(interceptors ...Interceptor) {
+	c.inters.VerificationCode = append(c.inters.VerificationCode, interceptors...)
+}
+
+// Create returns a builder for creating a VerificationCode entity.
+func (c *VerificationCodeClient) Create() *VerificationCodeCreate {
+	mutation := newVerificationCodeMutation(c.config, OpCreate)
+	return &VerificationCodeCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of VerificationCode entities.
+func (c *VerificationCodeClient) CreateBulk(builders ...*VerificationCodeCreate) *VerificationCodeCreateBulk {
+	return &VerificationCodeCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for VerificationCode.
+func (c *VerificationCodeClient) Update() *VerificationCodeUpdate {
+	mutation := newVerificationCodeMutation(c.config, OpUpdate)
+	return &VerificationCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *VerificationCodeClient) UpdateOne(vc *VerificationCode) *VerificationCodeUpdateOne {
+	mutation := newVerificationCodeMutation(c.config, OpUpdateOne, withVerificationCode(vc))
+	return &VerificationCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *VerificationCodeClient) UpdateOneID(id uuid.UUID) *VerificationCodeUpdateOne {
+	mutation := newVerificationCodeMutation(c.config, OpUpdateOne, withVerificationCodeID(id))
+	return &VerificationCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for VerificationCode.
+func (c *VerificationCodeClient) Delete() *VerificationCodeDelete {
+	mutation := newVerificationCodeMutation(c.config, OpDelete)
+	return &VerificationCodeDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *VerificationCodeClient) DeleteOne(vc *VerificationCode) *VerificationCodeDeleteOne {
+	return c.DeleteOneID(vc.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *VerificationCodeClient) DeleteOneID(id uuid.UUID) *VerificationCodeDeleteOne {
+	builder := c.Delete().Where(verificationcode.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &VerificationCodeDeleteOne{builder}
+}
+
+// Query returns a query builder for VerificationCode.
+func (c *VerificationCodeClient) Query() *VerificationCodeQuery {
+	return &VerificationCodeQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeVerificationCode},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a VerificationCode entity by its id.
+func (c *VerificationCodeClient) Get(ctx context.Context, id uuid.UUID) (*VerificationCode, error) {
+	return c.Query().Where(verificationcode.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *VerificationCodeClient) GetX(ctx context.Context, id uuid.UUID) *VerificationCode {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a VerificationCode.
+func (c *VerificationCodeClient) QueryUser(vc *VerificationCode) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := vc.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(verificationcode.Table, verificationcode.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, verificationcode.UserTable, verificationcode.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(vc.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *VerificationCodeClient) Hooks() []Hook {
+	return c.hooks.VerificationCode
+}
+
+// Interceptors returns the client interceptors.
+func (c *VerificationCodeClient) Interceptors() []Interceptor {
+	return c.inters.VerificationCode
+}
+
+func (c *VerificationCodeClient) mutate(ctx context.Context, m *VerificationCodeMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&VerificationCodeCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&VerificationCodeUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&VerificationCodeUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&VerificationCodeDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown VerificationCode mutation op: %q", m.Op())
+	}
+}
+
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Activity, Task, User []ent.Hook
+		Activity, Task, User, VerificationCode []ent.Hook
 	}
 	inters struct {
-		Activity, Task, User []ent.Interceptor
+		Activity, Task, User, VerificationCode []ent.Interceptor
 	}
 )

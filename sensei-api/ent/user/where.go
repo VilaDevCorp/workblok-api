@@ -81,6 +81,11 @@ func Dans(v int) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldDans, v))
 }
 
+// MailValid applies equality check predicate on the "MailValid" field. It's identical to MailValidEQ.
+func MailValid(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldMailValid, v))
+}
+
 // CreationDateEQ applies the EQ predicate on the "creationDate" field.
 func CreationDateEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreationDate, v))
@@ -356,6 +361,16 @@ func DansLTE(v int) predicate.User {
 	return predicate.User(sql.FieldLTE(FieldDans, v))
 }
 
+// MailValidEQ applies the EQ predicate on the "MailValid" field.
+func MailValidEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldMailValid, v))
+}
+
+// MailValidNEQ applies the NEQ predicate on the "MailValid" field.
+func MailValidNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldMailValid, v))
+}
+
 // HasActivities applies the HasEdge predicate on the "activities" edge.
 func HasActivities() predicate.User {
 	return predicate.User(func(s *sql.Selector) {
@@ -371,6 +386,29 @@ func HasActivities() predicate.User {
 func HasActivitiesWith(preds ...predicate.Activity) predicate.User {
 	return predicate.User(func(s *sql.Selector) {
 		step := newActivitiesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
+// HasCodes applies the HasEdge predicate on the "codes" edge.
+func HasCodes() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, CodesTable, CodesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasCodesWith applies the HasEdge predicate on the "codes" edge with a given conditions (other predicates).
+func HasCodesWith(preds ...predicate.VerificationCode) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newCodesStep()
 		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
 			for _, p := range preds {
 				p(s)

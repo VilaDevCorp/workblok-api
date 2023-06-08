@@ -7,6 +7,7 @@ import (
 	"sensei/ent/schema"
 	"sensei/ent/task"
 	"sensei/ent/user"
+	"sensei/ent/verificationcode"
 	"time"
 
 	"github.com/google/uuid"
@@ -79,8 +80,33 @@ func init() {
 	userDescDans := userFields[3].Descriptor()
 	// user.DefaultDans holds the default value on creation for the Dans field.
 	user.DefaultDans = userDescDans.Default.(int)
+	// userDescMailValid is the schema descriptor for MailValid field.
+	userDescMailValid := userFields[4].Descriptor()
+	// user.DefaultMailValid holds the default value on creation for the MailValid field.
+	user.DefaultMailValid = userDescMailValid.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.
 	user.DefaultID = userDescID.Default.(func() uuid.UUID)
+	verificationcodeMixin := schema.VerificationCode{}.Mixin()
+	verificationcodeMixinFields0 := verificationcodeMixin[0].Fields()
+	_ = verificationcodeMixinFields0
+	verificationcodeFields := schema.VerificationCode{}.Fields()
+	_ = verificationcodeFields
+	// verificationcodeDescCreationDate is the schema descriptor for creationDate field.
+	verificationcodeDescCreationDate := verificationcodeMixinFields0[1].Descriptor()
+	// verificationcode.DefaultCreationDate holds the default value on creation for the creationDate field.
+	verificationcode.DefaultCreationDate = verificationcodeDescCreationDate.Default.(func() time.Time)
+	// verificationcodeDescType is the schema descriptor for type field.
+	verificationcodeDescType := verificationcodeFields[0].Descriptor()
+	// verificationcode.TypeValidator is a validator for the "type" field. It is called by the builders before save.
+	verificationcode.TypeValidator = verificationcodeDescType.Validators[0].(func(string) error)
+	// verificationcodeDescCode is the schema descriptor for code field.
+	verificationcodeDescCode := verificationcodeFields[1].Descriptor()
+	// verificationcode.CodeValidator is a validator for the "code" field. It is called by the builders before save.
+	verificationcode.CodeValidator = verificationcodeDescCode.Validators[0].(func(string) error)
+	// verificationcodeDescID is the schema descriptor for id field.
+	verificationcodeDescID := verificationcodeMixinFields0[0].Descriptor()
+	// verificationcode.DefaultID holds the default value on creation for the id field.
+	verificationcode.DefaultID = verificationcodeDescID.Default.(func() uuid.UUID)
 }

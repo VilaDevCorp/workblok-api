@@ -10,6 +10,7 @@ import (
 	"sensei/ent/predicate"
 	"sensei/ent/task"
 	"sensei/ent/user"
+	"sensei/ent/verificationcode"
 
 	"entgo.io/ent/dialect/sql"
 	"entgo.io/ent/dialect/sql/sqlgraph"
@@ -69,6 +70,20 @@ func (uu *UserUpdate) AddDans(i int) *UserUpdate {
 	return uu
 }
 
+// SetMailValid sets the "MailValid" field.
+func (uu *UserUpdate) SetMailValid(b bool) *UserUpdate {
+	uu.mutation.SetMailValid(b)
+	return uu
+}
+
+// SetNillableMailValid sets the "MailValid" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableMailValid(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetMailValid(*b)
+	}
+	return uu
+}
+
 // AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
 func (uu *UserUpdate) AddActivityIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddActivityIDs(ids...)
@@ -82,6 +97,21 @@ func (uu *UserUpdate) AddActivities(a ...*Activity) *UserUpdate {
 		ids[i] = a[i].ID
 	}
 	return uu.AddActivityIDs(ids...)
+}
+
+// AddCodeIDs adds the "codes" edge to the VerificationCode entity by IDs.
+func (uu *UserUpdate) AddCodeIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddCodeIDs(ids...)
+	return uu
+}
+
+// AddCodes adds the "codes" edges to the VerificationCode entity.
+func (uu *UserUpdate) AddCodes(v ...*VerificationCode) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return uu.AddCodeIDs(ids...)
 }
 
 // AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
@@ -123,6 +153,27 @@ func (uu *UserUpdate) RemoveActivities(a ...*Activity) *UserUpdate {
 		ids[i] = a[i].ID
 	}
 	return uu.RemoveActivityIDs(ids...)
+}
+
+// ClearCodes clears all "codes" edges to the VerificationCode entity.
+func (uu *UserUpdate) ClearCodes() *UserUpdate {
+	uu.mutation.ClearCodes()
+	return uu
+}
+
+// RemoveCodeIDs removes the "codes" edge to VerificationCode entities by IDs.
+func (uu *UserUpdate) RemoveCodeIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveCodeIDs(ids...)
+	return uu
+}
+
+// RemoveCodes removes "codes" edges to VerificationCode entities.
+func (uu *UserUpdate) RemoveCodes(v ...*VerificationCode) *UserUpdate {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return uu.RemoveCodeIDs(ids...)
 }
 
 // ClearTasks clears all "tasks" edges to the Task entity.
@@ -220,6 +271,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.AddedDans(); ok {
 		_spec.AddField(user.FieldDans, field.TypeInt, value)
 	}
+	if value, ok := uu.mutation.MailValid(); ok {
+		_spec.SetField(user.FieldMailValid, field.TypeBool, value)
+	}
 	if uu.mutation.ActivitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -258,6 +312,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.CodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedCodesIDs(); len(nodes) > 0 && !uu.mutation.CodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.CodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -369,6 +468,20 @@ func (uuo *UserUpdateOne) AddDans(i int) *UserUpdateOne {
 	return uuo
 }
 
+// SetMailValid sets the "MailValid" field.
+func (uuo *UserUpdateOne) SetMailValid(b bool) *UserUpdateOne {
+	uuo.mutation.SetMailValid(b)
+	return uuo
+}
+
+// SetNillableMailValid sets the "MailValid" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableMailValid(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetMailValid(*b)
+	}
+	return uuo
+}
+
 // AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
 func (uuo *UserUpdateOne) AddActivityIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddActivityIDs(ids...)
@@ -382,6 +495,21 @@ func (uuo *UserUpdateOne) AddActivities(a ...*Activity) *UserUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return uuo.AddActivityIDs(ids...)
+}
+
+// AddCodeIDs adds the "codes" edge to the VerificationCode entity by IDs.
+func (uuo *UserUpdateOne) AddCodeIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddCodeIDs(ids...)
+	return uuo
+}
+
+// AddCodes adds the "codes" edges to the VerificationCode entity.
+func (uuo *UserUpdateOne) AddCodes(v ...*VerificationCode) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return uuo.AddCodeIDs(ids...)
 }
 
 // AddTaskIDs adds the "tasks" edge to the Task entity by IDs.
@@ -423,6 +551,27 @@ func (uuo *UserUpdateOne) RemoveActivities(a ...*Activity) *UserUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return uuo.RemoveActivityIDs(ids...)
+}
+
+// ClearCodes clears all "codes" edges to the VerificationCode entity.
+func (uuo *UserUpdateOne) ClearCodes() *UserUpdateOne {
+	uuo.mutation.ClearCodes()
+	return uuo
+}
+
+// RemoveCodeIDs removes the "codes" edge to VerificationCode entities by IDs.
+func (uuo *UserUpdateOne) RemoveCodeIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveCodeIDs(ids...)
+	return uuo
+}
+
+// RemoveCodes removes "codes" edges to VerificationCode entities.
+func (uuo *UserUpdateOne) RemoveCodes(v ...*VerificationCode) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(v))
+	for i := range v {
+		ids[i] = v[i].ID
+	}
+	return uuo.RemoveCodeIDs(ids...)
 }
 
 // ClearTasks clears all "tasks" edges to the Task entity.
@@ -550,6 +699,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	if value, ok := uuo.mutation.AddedDans(); ok {
 		_spec.AddField(user.FieldDans, field.TypeInt, value)
 	}
+	if value, ok := uuo.mutation.MailValid(); ok {
+		_spec.SetField(user.FieldMailValid, field.TypeBool, value)
+	}
 	if uuo.mutation.ActivitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
 			Rel:     sqlgraph.O2M,
@@ -588,6 +740,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.CodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedCodesIDs(); len(nodes) > 0 && !uuo.mutation.CodesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.CodesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.CodesTable,
+			Columns: []string{user.CodesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(verificationcode.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

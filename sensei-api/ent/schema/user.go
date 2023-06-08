@@ -24,6 +24,7 @@ func (User) Fields() []ent.Field {
 		field.String("Mail").Unique().NotEmpty().StructTag(`json:"mail"`),
 		field.String("Password").NotEmpty().StructTag(`json:"-"`),
 		field.Int("Dans").Default(0).StructTag(`json:"dans"`),
+		field.Bool("MailValid").StorageKey("mail_valid").Default(false).StructTag(`json:"mailValid"`),
 	}
 }
 
@@ -31,6 +32,7 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("activities", Activity.Type),
+		edge.To("codes", VerificationCode.Type),
 		edge.To("tasks", Task.Type),
 	}
 }

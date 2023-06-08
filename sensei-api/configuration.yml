@@ -1,6 +1,12 @@
 IP: www.coollocalhost.com
 Port: 8080
 JwtKey: sEnSeI258SECRETkey
+Mail:
+  User: senseitrainingapp@gmail.com
+  Pass: emaddwcfyqjexjum
+  SmtpHost: smtp.gmail.com
+  SmtpPort: 587
+ 
 DB: 
   Host: localhost
   Port: 3306

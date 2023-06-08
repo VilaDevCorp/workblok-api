@@ -3,6 +3,7 @@
 package migrate
 
 import (
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/dialect/sql/schema"
 	"entgo.io/ent/schema/field"
 )
@@ -69,6 +70,7 @@ var (
 		{Name: "mail", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
 		{Name: "dans", Type: field.TypeInt, Default: 0},
+		{Name: "mail_valid", Type: field.TypeBool, Default: false},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{
@@ -76,11 +78,36 @@ var (
 		Columns:    UsersColumns,
 		PrimaryKey: []*schema.Column{UsersColumns[0]},
 	}
+	// VerificationCodesColumns holds the columns for the "verification_codes" table.
+	VerificationCodesColumns = []*schema.Column{
+		{Name: "id", Type: field.TypeUUID, Unique: true},
+		{Name: "creation_date", Type: field.TypeTime},
+		{Name: "type", Type: field.TypeString},
+		{Name: "code", Type: field.TypeString},
+		{Name: "expire_date", Type: field.TypeTime},
+		{Name: "valid", Type: field.TypeBool},
+		{Name: "user_codes", Type: field.TypeUUID},
+	}
+	// VerificationCodesTable holds the schema information for the "verification_codes" table.
+	VerificationCodesTable = &schema.Table{
+		Name:       "verification_codes",
+		Columns:    VerificationCodesColumns,
+		PrimaryKey: []*schema.Column{VerificationCodesColumns[0]},
+		ForeignKeys: []*schema.ForeignKey{
+			{
+				Symbol:     "verification_codes_users_codes",
+				Columns:    []*schema.Column{VerificationCodesColumns[6]},
+				RefColumns: []*schema.Column{UsersColumns[0]},
+				OnDelete:   schema.NoAction,
+			},
+		},
+	}
 	// Tables holds all the tables in the schema.
 	Tables = []*schema.Table{
 		ActivitiesTable,
 		TasksTable,
 		UsersTable,
+		VerificationCodesTable,
 	}
 )
 
@@ -88,4 +115,8 @@ func init() {
 	ActivitiesTable.ForeignKeys[0].RefTable = UsersTable
 	TasksTable.ForeignKeys[0].RefTable = ActivitiesTable
 	TasksTable.ForeignKeys[1].RefTable = UsersTable
+	VerificationCodesTable.ForeignKeys[0].RefTable = UsersTable
+	VerificationCodesTable.Annotation = &entsql.Annotation{
+		Table: "verification_codes",
+	}
 }
