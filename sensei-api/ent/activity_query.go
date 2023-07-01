@@ -10,6 +10,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/predicate"
 	"sensei/ent/task"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 
 	"entgo.io/ent/dialect/sql"
@@ -21,13 +22,14 @@ import (
 // ActivityQuery is the builder for querying Activity entities.
 type ActivityQuery struct {
 	config
-	ctx        *QueryContext
-	order      []activity.OrderOption
-	inters     []Interceptor
-	predicates []predicate.Activity
-	withUser   *UserQuery
-	withTasks  *TaskQuery
-	withFKs    bool
+	ctx               *QueryContext
+	order             []activity.OrderOption
+	inters            []Interceptor
+	predicates        []predicate.Activity
+	withUser          *UserQuery
+	withTasks         *TaskQuery
+	withTemplateTasks *TemplateTaskQuery
+	withFKs           bool
 	// intermediate query (i.e. traversal path).
 	sql  *sql.Selector
 	path func(context.Context) (*sql.Selector, error)
@@ -101,6 +103,28 @@ func (aq *ActivityQuery) QueryTasks() *TaskQuery {
 			sqlgraph.From(activity.Table, activity.FieldID, selector),
 			sqlgraph.To(task.Table, task.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, activity.TasksTable, activity.TasksColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTemplateTasks chains the current query on the "templateTasks" edge.
+func (aq *ActivityQuery) QueryTemplateTasks() *TemplateTaskQuery {
+	query := (&TemplateTaskClient{config: aq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := aq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := aq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(activity.Table, activity.FieldID, selector),
+			sqlgraph.To(templatetask.Table, templatetask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, activity.TemplateTasksTable, activity.TemplateTasksColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(aq.driver.Dialect(), step)
 		return fromU, nil
@@ -295,13 +319,14 @@ func (aq *ActivityQuery) Clone() *ActivityQuery {
 		return nil
 	}
 	return &ActivityQuery{
-		config:     aq.config,
-		ctx:        aq.ctx.Clone(),
-		order:      append([]activity.OrderOption{}, aq.order...),
-		inters:     append([]Interceptor{}, aq.inters...),
-		predicates: append([]predicate.Activity{}, aq.predicates...),
-		withUser:   aq.withUser.Clone(),
-		withTasks:  aq.withTasks.Clone(),
+		config:            aq.config,
+		ctx:               aq.ctx.Clone(),
+		order:             append([]activity.OrderOption{}, aq.order...),
+		inters:            append([]Interceptor{}, aq.inters...),
+		predicates:        append([]predicate.Activity{}, aq.predicates...),
+		withUser:          aq.withUser.Clone(),
+		withTasks:         aq.withTasks.Clone(),
+		withTemplateTasks: aq.withTemplateTasks.Clone(),
 		// clone intermediate query.
 		sql:  aq.sql.Clone(),
 		path: aq.path,
@@ -327,6 +352,17 @@ func (aq *ActivityQuery) WithTasks(opts ...func(*TaskQuery)) *ActivityQuery {
 		opt(query)
 	}
 	aq.withTasks = query
+	return aq
+}
+
+// WithTemplateTasks tells the query-builder to eager-load the nodes that are connected to
+// the "templateTasks" edge. The optional arguments are used to configure the query builder of the edge.
+func (aq *ActivityQuery) WithTemplateTasks(opts ...func(*TemplateTaskQuery)) *ActivityQuery {
+	query := (&TemplateTaskClient{config: aq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	aq.withTemplateTasks = query
 	return aq
 }
 
@@ -409,9 +445,10 @@ func (aq *ActivityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Act
 		nodes       = []*Activity{}
 		withFKs     = aq.withFKs
 		_spec       = aq.querySpec()
-		loadedTypes = [2]bool{
+		loadedTypes = [3]bool{
 			aq.withUser != nil,
 			aq.withTasks != nil,
+			aq.withTemplateTasks != nil,
 		}
 	)
 	if aq.withUser != nil {
@@ -448,6 +485,13 @@ func (aq *ActivityQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*Act
 		if err := aq.loadTasks(ctx, query, nodes,
 			func(n *Activity) { n.Edges.Tasks = []*Task{} },
 			func(n *Activity, e *Task) { n.Edges.Tasks = append(n.Edges.Tasks, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := aq.withTemplateTasks; query != nil {
+		if err := aq.loadTemplateTasks(ctx, query, nodes,
+			func(n *Activity) { n.Edges.TemplateTasks = []*TemplateTask{} },
+			func(n *Activity, e *TemplateTask) { n.Edges.TemplateTasks = append(n.Edges.TemplateTasks, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -512,6 +556,37 @@ func (aq *ActivityQuery) loadTasks(ctx context.Context, query *TaskQuery, nodes 
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "activity_tasks" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (aq *ActivityQuery) loadTemplateTasks(ctx context.Context, query *TemplateTaskQuery, nodes []*Activity, init func(*Activity), assign func(*Activity, *TemplateTask)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*Activity)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.TemplateTask(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(activity.TemplateTasksColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.activity_template_tasks
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "activity_template_tasks" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "activity_template_tasks" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

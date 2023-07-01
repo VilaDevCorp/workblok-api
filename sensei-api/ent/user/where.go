@@ -394,6 +394,29 @@ func HasActivitiesWith(preds ...predicate.Activity) predicate.User {
 	})
 }
 
+// HasTemplates applies the HasEdge predicate on the "templates" edge.
+func HasTemplates() predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TemplatesTable, TemplatesColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTemplatesWith applies the HasEdge predicate on the "templates" edge with a given conditions (other predicates).
+func HasTemplatesWith(preds ...predicate.Template) predicate.User {
+	return predicate.User(func(s *sql.Selector) {
+		step := newTemplatesStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // HasCodes applies the HasEdge predicate on the "codes" edge.
 func HasCodes() predicate.User {
 	return predicate.User(func(s *sql.Selector) {

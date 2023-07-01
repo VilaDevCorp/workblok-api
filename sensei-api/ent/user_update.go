@@ -9,6 +9,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/predicate"
 	"sensei/ent/task"
+	"sensei/ent/template"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 
@@ -99,6 +100,21 @@ func (uu *UserUpdate) AddActivities(a ...*Activity) *UserUpdate {
 	return uu.AddActivityIDs(ids...)
 }
 
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (uu *UserUpdate) AddTemplateIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.AddTemplateIDs(ids...)
+	return uu
+}
+
+// AddTemplates adds the "templates" edges to the Template entity.
+func (uu *UserUpdate) AddTemplates(t ...*Template) *UserUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uu.AddTemplateIDs(ids...)
+}
+
 // AddCodeIDs adds the "codes" edge to the VerificationCode entity by IDs.
 func (uu *UserUpdate) AddCodeIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddCodeIDs(ids...)
@@ -153,6 +169,27 @@ func (uu *UserUpdate) RemoveActivities(a ...*Activity) *UserUpdate {
 		ids[i] = a[i].ID
 	}
 	return uu.RemoveActivityIDs(ids...)
+}
+
+// ClearTemplates clears all "templates" edges to the Template entity.
+func (uu *UserUpdate) ClearTemplates() *UserUpdate {
+	uu.mutation.ClearTemplates()
+	return uu
+}
+
+// RemoveTemplateIDs removes the "templates" edge to Template entities by IDs.
+func (uu *UserUpdate) RemoveTemplateIDs(ids ...uuid.UUID) *UserUpdate {
+	uu.mutation.RemoveTemplateIDs(ids...)
+	return uu
+}
+
+// RemoveTemplates removes "templates" edges to Template entities.
+func (uu *UserUpdate) RemoveTemplates(t ...*Template) *UserUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uu.RemoveTemplateIDs(ids...)
 }
 
 // ClearCodes clears all "codes" edges to the VerificationCode entity.
@@ -312,6 +349,51 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uu.mutation.TemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.RemovedTemplatesIDs(); len(nodes) > 0 && !uu.mutation.TemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uu.mutation.TemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {
@@ -497,6 +579,21 @@ func (uuo *UserUpdateOne) AddActivities(a ...*Activity) *UserUpdateOne {
 	return uuo.AddActivityIDs(ids...)
 }
 
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (uuo *UserUpdateOne) AddTemplateIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.AddTemplateIDs(ids...)
+	return uuo
+}
+
+// AddTemplates adds the "templates" edges to the Template entity.
+func (uuo *UserUpdateOne) AddTemplates(t ...*Template) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uuo.AddTemplateIDs(ids...)
+}
+
 // AddCodeIDs adds the "codes" edge to the VerificationCode entity by IDs.
 func (uuo *UserUpdateOne) AddCodeIDs(ids ...uuid.UUID) *UserUpdateOne {
 	uuo.mutation.AddCodeIDs(ids...)
@@ -551,6 +648,27 @@ func (uuo *UserUpdateOne) RemoveActivities(a ...*Activity) *UserUpdateOne {
 		ids[i] = a[i].ID
 	}
 	return uuo.RemoveActivityIDs(ids...)
+}
+
+// ClearTemplates clears all "templates" edges to the Template entity.
+func (uuo *UserUpdateOne) ClearTemplates() *UserUpdateOne {
+	uuo.mutation.ClearTemplates()
+	return uuo
+}
+
+// RemoveTemplateIDs removes the "templates" edge to Template entities by IDs.
+func (uuo *UserUpdateOne) RemoveTemplateIDs(ids ...uuid.UUID) *UserUpdateOne {
+	uuo.mutation.RemoveTemplateIDs(ids...)
+	return uuo
+}
+
+// RemoveTemplates removes "templates" edges to Template entities.
+func (uuo *UserUpdateOne) RemoveTemplates(t ...*Template) *UserUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uuo.RemoveTemplateIDs(ids...)
 }
 
 // ClearCodes clears all "codes" edges to the VerificationCode entity.
@@ -740,6 +858,51 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if uuo.mutation.TemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.RemovedTemplatesIDs(); len(nodes) > 0 && !uuo.mutation.TemplatesCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := uuo.mutation.TemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

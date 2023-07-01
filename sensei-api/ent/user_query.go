@@ -10,6 +10,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/predicate"
 	"sensei/ent/task"
+	"sensei/ent/template"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 
@@ -27,6 +28,7 @@ type UserQuery struct {
 	inters         []Interceptor
 	predicates     []predicate.User
 	withActivities *ActivityQuery
+	withTemplates  *TemplateQuery
 	withCodes      *VerificationCodeQuery
 	withTasks      *TaskQuery
 	// intermediate query (i.e. traversal path).
@@ -80,6 +82,28 @@ func (uq *UserQuery) QueryActivities() *ActivityQuery {
 			sqlgraph.From(user.Table, user.FieldID, selector),
 			sqlgraph.To(activity.Table, activity.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ActivitiesTable, user.ActivitiesColumn),
+		)
+		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
+		return fromU, nil
+	}
+	return query
+}
+
+// QueryTemplates chains the current query on the "templates" edge.
+func (uq *UserQuery) QueryTemplates() *TemplateQuery {
+	query := (&TemplateClient{config: uq.config}).Query()
+	query.path = func(ctx context.Context) (fromU *sql.Selector, err error) {
+		if err := uq.prepareQuery(ctx); err != nil {
+			return nil, err
+		}
+		selector := uq.sqlQuery(ctx)
+		if err := selector.Err(); err != nil {
+			return nil, err
+		}
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, selector),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TemplatesTable, user.TemplatesColumn),
 		)
 		fromU = sqlgraph.SetNeighbors(uq.driver.Dialect(), step)
 		return fromU, nil
@@ -324,6 +348,7 @@ func (uq *UserQuery) Clone() *UserQuery {
 		inters:         append([]Interceptor{}, uq.inters...),
 		predicates:     append([]predicate.User{}, uq.predicates...),
 		withActivities: uq.withActivities.Clone(),
+		withTemplates:  uq.withTemplates.Clone(),
 		withCodes:      uq.withCodes.Clone(),
 		withTasks:      uq.withTasks.Clone(),
 		// clone intermediate query.
@@ -340,6 +365,17 @@ func (uq *UserQuery) WithActivities(opts ...func(*ActivityQuery)) *UserQuery {
 		opt(query)
 	}
 	uq.withActivities = query
+	return uq
+}
+
+// WithTemplates tells the query-builder to eager-load the nodes that are connected to
+// the "templates" edge. The optional arguments are used to configure the query builder of the edge.
+func (uq *UserQuery) WithTemplates(opts ...func(*TemplateQuery)) *UserQuery {
+	query := (&TemplateClient{config: uq.config}).Query()
+	for _, opt := range opts {
+		opt(query)
+	}
+	uq.withTemplates = query
 	return uq
 }
 
@@ -443,8 +479,9 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 	var (
 		nodes       = []*User{}
 		_spec       = uq.querySpec()
-		loadedTypes = [3]bool{
+		loadedTypes = [4]bool{
 			uq.withActivities != nil,
+			uq.withTemplates != nil,
 			uq.withCodes != nil,
 			uq.withTasks != nil,
 		}
@@ -471,6 +508,13 @@ func (uq *UserQuery) sqlAll(ctx context.Context, hooks ...queryHook) ([]*User, e
 		if err := uq.loadActivities(ctx, query, nodes,
 			func(n *User) { n.Edges.Activities = []*Activity{} },
 			func(n *User, e *Activity) { n.Edges.Activities = append(n.Edges.Activities, e) }); err != nil {
+			return nil, err
+		}
+	}
+	if query := uq.withTemplates; query != nil {
+		if err := uq.loadTemplates(ctx, query, nodes,
+			func(n *User) { n.Edges.Templates = []*Template{} },
+			func(n *User, e *Template) { n.Edges.Templates = append(n.Edges.Templates, e) }); err != nil {
 			return nil, err
 		}
 	}
@@ -517,6 +561,37 @@ func (uq *UserQuery) loadActivities(ctx context.Context, query *ActivityQuery, n
 		node, ok := nodeids[*fk]
 		if !ok {
 			return fmt.Errorf(`unexpected referenced foreign-key "user_activities" returned %v for node %v`, *fk, n.ID)
+		}
+		assign(node, n)
+	}
+	return nil
+}
+func (uq *UserQuery) loadTemplates(ctx context.Context, query *TemplateQuery, nodes []*User, init func(*User), assign func(*User, *Template)) error {
+	fks := make([]driver.Value, 0, len(nodes))
+	nodeids := make(map[uuid.UUID]*User)
+	for i := range nodes {
+		fks = append(fks, nodes[i].ID)
+		nodeids[nodes[i].ID] = nodes[i]
+		if init != nil {
+			init(nodes[i])
+		}
+	}
+	query.withFKs = true
+	query.Where(predicate.Template(func(s *sql.Selector) {
+		s.Where(sql.InValues(s.C(user.TemplatesColumn), fks...))
+	}))
+	neighbors, err := query.All(ctx)
+	if err != nil {
+		return err
+	}
+	for _, n := range neighbors {
+		fk := n.user_templates
+		if fk == nil {
+			return fmt.Errorf(`foreign-key "user_templates" is nil for node %v`, n.ID)
+		}
+		node, ok := nodeids[*fk]
+		if !ok {
+			return fmt.Errorf(`unexpected referenced foreign-key "user_templates" returned %v for node %v`, *fk, n.ID)
 		}
 		assign(node, n)
 	}

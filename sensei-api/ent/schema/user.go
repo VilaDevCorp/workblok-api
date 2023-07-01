@@ -32,6 +32,7 @@ func (User) Fields() []ent.Field {
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("activities", Activity.Type),
+		edge.To("templates", Template.Type),
 		edge.To("codes", VerificationCode.Type),
 		edge.To("tasks", Task.Type),
 	}

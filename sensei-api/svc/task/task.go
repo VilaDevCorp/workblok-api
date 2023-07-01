@@ -20,7 +20,7 @@ type Svc interface {
 	Update(ctx context.Context, form UpdateForm) (*ent.Task, error)
 	Search(ctx context.Context, form SearchForm) (*utils.Page, error)
 	Get(ctx context.Context, taskId uuid.UUID) (*ent.Task, error)
-	Delete(ctx context.Context, taskId uuid.UUID) error
+	Delete(ctx context.Context, taskIds []uuid.UUID) error
 	Complete(ctx context.Context, taskIds []uuid.UUID, isComplete bool) (int, error)
 }
 
@@ -79,8 +79,8 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	return &page, err
 }
 
-func (s *Store) Delete(ctx context.Context, taskId uuid.UUID) error {
-	err := s.DB.Task.DeleteOneID(taskId).Exec(ctx)
+func (s *Store) Delete(ctx context.Context, taskIds []uuid.UUID) error {
+	_, err := s.DB.Task.Delete().Where(task.IDIn(taskIds...)).Exec(ctx)
 	return err
 }
 

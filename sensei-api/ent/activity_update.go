@@ -9,6 +9,7 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/predicate"
 	"sensei/ent/task"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 
 	"entgo.io/ent/dialect/sql"
@@ -95,6 +96,21 @@ func (au *ActivityUpdate) AddTasks(t ...*Task) *ActivityUpdate {
 	return au.AddTaskIDs(ids...)
 }
 
+// AddTemplateTaskIDs adds the "templateTasks" edge to the TemplateTask entity by IDs.
+func (au *ActivityUpdate) AddTemplateTaskIDs(ids ...uuid.UUID) *ActivityUpdate {
+	au.mutation.AddTemplateTaskIDs(ids...)
+	return au
+}
+
+// AddTemplateTasks adds the "templateTasks" edges to the TemplateTask entity.
+func (au *ActivityUpdate) AddTemplateTasks(t ...*TemplateTask) *ActivityUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.AddTemplateTaskIDs(ids...)
+}
+
 // Mutation returns the ActivityMutation object of the builder.
 func (au *ActivityUpdate) Mutation() *ActivityMutation {
 	return au.mutation
@@ -125,6 +141,27 @@ func (au *ActivityUpdate) RemoveTasks(t ...*Task) *ActivityUpdate {
 		ids[i] = t[i].ID
 	}
 	return au.RemoveTaskIDs(ids...)
+}
+
+// ClearTemplateTasks clears all "templateTasks" edges to the TemplateTask entity.
+func (au *ActivityUpdate) ClearTemplateTasks() *ActivityUpdate {
+	au.mutation.ClearTemplateTasks()
+	return au
+}
+
+// RemoveTemplateTaskIDs removes the "templateTasks" edge to TemplateTask entities by IDs.
+func (au *ActivityUpdate) RemoveTemplateTaskIDs(ids ...uuid.UUID) *ActivityUpdate {
+	au.mutation.RemoveTemplateTaskIDs(ids...)
+	return au
+}
+
+// RemoveTemplateTasks removes "templateTasks" edges to TemplateTask entities.
+func (au *ActivityUpdate) RemoveTemplateTasks(t ...*TemplateTask) *ActivityUpdate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return au.RemoveTemplateTaskIDs(ids...)
 }
 
 // Save executes the query and returns the number of nodes affected by the update operation.
@@ -268,6 +305,51 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 		}
 		_spec.Edges.Add = append(_spec.Edges.Add, edge)
 	}
+	if au.mutation.TemplateTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.RemovedTemplateTasksIDs(); len(nodes) > 0 && !au.mutation.TemplateTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := au.mutation.TemplateTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
 	if n, err = sqlgraph.UpdateNodes(ctx, au.driver, _spec); err != nil {
 		if _, ok := err.(*sqlgraph.NotFoundError); ok {
 			err = &NotFoundError{activity.Label}
@@ -353,6 +435,21 @@ func (auo *ActivityUpdateOne) AddTasks(t ...*Task) *ActivityUpdateOne {
 	return auo.AddTaskIDs(ids...)
 }
 
+// AddTemplateTaskIDs adds the "templateTasks" edge to the TemplateTask entity by IDs.
+func (auo *ActivityUpdateOne) AddTemplateTaskIDs(ids ...uuid.UUID) *ActivityUpdateOne {
+	auo.mutation.AddTemplateTaskIDs(ids...)
+	return auo
+}
+
+// AddTemplateTasks adds the "templateTasks" edges to the TemplateTask entity.
+func (auo *ActivityUpdateOne) AddTemplateTasks(t ...*TemplateTask) *ActivityUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.AddTemplateTaskIDs(ids...)
+}
+
 // Mutation returns the ActivityMutation object of the builder.
 func (auo *ActivityUpdateOne) Mutation() *ActivityMutation {
 	return auo.mutation
@@ -383,6 +480,27 @@ func (auo *ActivityUpdateOne) RemoveTasks(t ...*Task) *ActivityUpdateOne {
 		ids[i] = t[i].ID
 	}
 	return auo.RemoveTaskIDs(ids...)
+}
+
+// ClearTemplateTasks clears all "templateTasks" edges to the TemplateTask entity.
+func (auo *ActivityUpdateOne) ClearTemplateTasks() *ActivityUpdateOne {
+	auo.mutation.ClearTemplateTasks()
+	return auo
+}
+
+// RemoveTemplateTaskIDs removes the "templateTasks" edge to TemplateTask entities by IDs.
+func (auo *ActivityUpdateOne) RemoveTemplateTaskIDs(ids ...uuid.UUID) *ActivityUpdateOne {
+	auo.mutation.RemoveTemplateTaskIDs(ids...)
+	return auo
+}
+
+// RemoveTemplateTasks removes "templateTasks" edges to TemplateTask entities.
+func (auo *ActivityUpdateOne) RemoveTemplateTasks(t ...*TemplateTask) *ActivityUpdateOne {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return auo.RemoveTemplateTaskIDs(ids...)
 }
 
 // Where appends a list predicates to the ActivityUpdate builder.
@@ -549,6 +667,51 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Add = append(_spec.Edges.Add, edge)
+	}
+	if auo.mutation.TemplateTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
+			},
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.RemovedTemplateTasksIDs(); len(nodes) > 0 && !auo.mutation.TemplateTasksCleared() {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges.Clear = append(_spec.Edges.Clear, edge)
+	}
+	if nodes := auo.mutation.TemplateTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

@@ -6,6 +6,7 @@ import (
 	"sensei/api/activity"
 	"sensei/api/auth"
 	"sensei/api/task"
+	"sensei/api/template"
 	"sensei/api/user"
 	"sensei/conf"
 	"sensei/middleware"
@@ -47,13 +48,20 @@ func GetRouter() *gin.Engine {
 	priv.GET("/task/:id", task.Get)
 	priv.POST("/task/search", task.Search)
 	priv.POST("/task/complete", task.Complete)
-	priv.DELETE("/task/:id", task.Delete)
+	priv.DELETE("/task", task.Delete)
 	priv.POST("/user", user.Create)
 	priv.PUT("/user", user.Update)
 	priv.GET("/user/:id", user.Get)
 	priv.POST("/user/search", user.Search)
 	priv.DELETE("/user/:id", user.Delete)
-
+	priv.POST("/template", template.Create)
+	priv.PUT("/template", template.Update)
+	priv.GET("/template/:id", template.Get)
+	priv.POST("/template/search", template.Search)
+	priv.DELETE("/template", template.Delete)
+	priv.POST("/template/:id/tasks", template.CreateTask)
+	priv.DELETE("/template/tasks", template.DeleteTasks)
+	priv.POST("/template/:id/apply", template.ApplyTemplate)
 	return api
 }
 

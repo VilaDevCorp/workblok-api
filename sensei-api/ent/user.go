@@ -40,13 +40,15 @@ type User struct {
 type UserEdges struct {
 	// Activities holds the value of the activities edge.
 	Activities []*Activity `json:"activities,omitempty"`
+	// Templates holds the value of the templates edge.
+	Templates []*Template `json:"templates,omitempty"`
 	// Codes holds the value of the codes edge.
 	Codes []*VerificationCode `json:"codes,omitempty"`
 	// Tasks holds the value of the tasks edge.
 	Tasks []*Task `json:"tasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [3]bool
+	loadedTypes [4]bool
 }
 
 // ActivitiesOrErr returns the Activities value or an error if the edge
@@ -58,10 +60,19 @@ func (e UserEdges) ActivitiesOrErr() ([]*Activity, error) {
 	return nil, &NotLoadedError{edge: "activities"}
 }
 
+// TemplatesOrErr returns the Templates value or an error if the edge
+// was not loaded in eager-loading.
+func (e UserEdges) TemplatesOrErr() ([]*Template, error) {
+	if e.loadedTypes[1] {
+		return e.Templates, nil
+	}
+	return nil, &NotLoadedError{edge: "templates"}
+}
+
 // CodesOrErr returns the Codes value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) CodesOrErr() ([]*VerificationCode, error) {
-	if e.loadedTypes[1] {
+	if e.loadedTypes[2] {
 		return e.Codes, nil
 	}
 	return nil, &NotLoadedError{edge: "codes"}
@@ -70,7 +81,7 @@ func (e UserEdges) CodesOrErr() ([]*VerificationCode, error) {
 // TasksOrErr returns the Tasks value or an error if the edge
 // was not loaded in eager-loading.
 func (e UserEdges) TasksOrErr() ([]*Task, error) {
-	if e.loadedTypes[2] {
+	if e.loadedTypes[3] {
 		return e.Tasks, nil
 	}
 	return nil, &NotLoadedError{edge: "tasks"}
@@ -164,6 +175,11 @@ func (u *User) Value(name string) (ent.Value, error) {
 // QueryActivities queries the "activities" edge of the User entity.
 func (u *User) QueryActivities() *ActivityQuery {
 	return NewUserClient(u.config).QueryActivities(u)
+}
+
+// QueryTemplates queries the "templates" edge of the User entity.
+func (u *User) QueryTemplates() *TemplateQuery {
+	return NewUserClient(u.config).QueryTemplates(u)
 }
 
 // QueryCodes queries the "codes" edge of the User entity.

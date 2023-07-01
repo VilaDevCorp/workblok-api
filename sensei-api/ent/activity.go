@@ -42,9 +42,11 @@ type ActivityEdges struct {
 	User *User `json:"user,omitempty"`
 	// Tasks holds the value of the tasks edge.
 	Tasks []*Task `json:"tasks,omitempty"`
+	// TemplateTasks holds the value of the templateTasks edge.
+	TemplateTasks []*TemplateTask `json:"templateTasks,omitempty"`
 	// loadedTypes holds the information for reporting if a
 	// type was loaded (or requested) in eager-loading or not.
-	loadedTypes [2]bool
+	loadedTypes [3]bool
 }
 
 // UserOrErr returns the User value or an error if the edge
@@ -67,6 +69,15 @@ func (e ActivityEdges) TasksOrErr() ([]*Task, error) {
 		return e.Tasks, nil
 	}
 	return nil, &NotLoadedError{edge: "tasks"}
+}
+
+// TemplateTasksOrErr returns the TemplateTasks value or an error if the edge
+// was not loaded in eager-loading.
+func (e ActivityEdges) TemplateTasksOrErr() ([]*TemplateTask, error) {
+	if e.loadedTypes[2] {
+		return e.TemplateTasks, nil
+	}
+	return nil, &NotLoadedError{edge: "templateTasks"}
 }
 
 // scanValues returns the types for scanning values from sql.Rows.
@@ -163,6 +174,11 @@ func (a *Activity) QueryUser() *UserQuery {
 // QueryTasks queries the "tasks" edge of the Activity entity.
 func (a *Activity) QueryTasks() *TaskQuery {
 	return NewActivityClient(a.config).QueryTasks(a)
+}
+
+// QueryTemplateTasks queries the "templateTasks" edge of the Activity entity.
+func (a *Activity) QueryTemplateTasks() *TemplateTaskQuery {
+	return NewActivityClient(a.config).QueryTemplateTasks(a)
 }
 
 // Update returns a builder for updating this Activity.

@@ -29,3 +29,7 @@ type CompleteForm struct {
 	TaskIds     []uuid.UUID `json:"taskIds" binding:"required"`
 	IsCompleted bool        `json:"isCompleted"`
 }
+
+type DeleteForm struct {
+	TaskIds []uuid.UUID `json:"taskIds"`
+}

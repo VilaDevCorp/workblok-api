@@ -402,6 +402,29 @@ func HasTasksWith(preds ...predicate.Task) predicate.Activity {
 	})
 }
 
+// HasTemplateTasks applies the HasEdge predicate on the "templateTasks" edge.
+func HasTemplateTasks() predicate.Activity {
+	return predicate.Activity(func(s *sql.Selector) {
+		step := sqlgraph.NewStep(
+			sqlgraph.From(Table, FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, TemplateTasksTable, TemplateTasksColumn),
+		)
+		sqlgraph.HasNeighbors(s, step)
+	})
+}
+
+// HasTemplateTasksWith applies the HasEdge predicate on the "templateTasks" edge with a given conditions (other predicates).
+func HasTemplateTasksWith(preds ...predicate.TemplateTask) predicate.Activity {
+	return predicate.Activity(func(s *sql.Selector) {
+		step := newTemplateTasksStep()
+		sqlgraph.HasNeighborsWith(s, step, func(s *sql.Selector) {
+			for _, p := range preds {
+				p(s)
+			}
+		})
+	})
+}
+
 // And groups predicates with the AND operator between them.
 func And(predicates ...predicate.Activity) predicate.Activity {
 	return predicate.Activity(func(s *sql.Selector) {

@@ -5,6 +5,7 @@ import (
 	"sensei/svc/activity"
 	"sensei/svc/auth"
 	"sensei/svc/task"
+	"sensei/svc/template"
 	"sensei/svc/user"
 	"sensei/svc/verificationCode"
 )
@@ -15,6 +16,7 @@ type Service struct {
 	User             user.Svc
 	Auth             auth.Svc
 	VerificationCode verificationCode.Svc
+	Template         template.Svc
 }
 
 var svc Service
@@ -31,5 +33,6 @@ func Setup() {
 		User:             &user.Store{DB: client},
 		Auth:             &auth.Store{DB: client},
 		VerificationCode: &verificationCode.Store{DB: client},
+		Template:         &template.Store{DB: client},
 	}
 }

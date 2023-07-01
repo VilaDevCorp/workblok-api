@@ -9,6 +9,8 @@ import (
 	"reflect"
 	"sensei/ent/activity"
 	"sensei/ent/task"
+	"sensei/ent/template"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 	"sync"
@@ -78,6 +80,8 @@ func checkColumn(table, column string) error {
 		columnCheck = sql.NewColumnCheck(map[string]func(string) bool{
 			activity.Table:         activity.ValidColumn,
 			task.Table:             task.ValidColumn,
+			template.Table:         template.ValidColumn,
+			templatetask.Table:     templatetask.ValidColumn,
 			user.Table:             user.ValidColumn,
 			verificationcode.Table: verificationcode.ValidColumn,
 		})

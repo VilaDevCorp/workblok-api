@@ -9,6 +9,8 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/predicate"
 	"sensei/ent/task"
+	"sensei/ent/template"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 	"sync"
@@ -30,6 +32,8 @@ const (
 	// Node types.
 	TypeActivity         = "Activity"
 	TypeTask             = "Task"
+	TypeTemplate         = "Template"
+	TypeTemplateTask     = "TemplateTask"
 	TypeUser             = "User"
 	TypeVerificationCode = "VerificationCode"
 )
@@ -37,24 +41,27 @@ const (
 // ActivityMutation represents an operation that mutates the Activity nodes in the graph.
 type ActivityMutation struct {
 	config
-	op            Op
-	typ           string
-	id            *uuid.UUID
-	creationDate  *time.Time
-	name          *string
-	description   *string
-	icon          *string
-	size          *int
-	addsize       *int
-	clearedFields map[string]struct{}
-	user          *uuid.UUID
-	cleareduser   bool
-	tasks         map[uuid.UUID]struct{}
-	removedtasks  map[uuid.UUID]struct{}
-	clearedtasks  bool
-	done          bool
-	oldValue      func(context.Context) (*Activity, error)
-	predicates    []predicate.Activity
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	creationDate         *time.Time
+	name                 *string
+	description          *string
+	icon                 *string
+	size                 *int
+	addsize              *int
+	clearedFields        map[string]struct{}
+	user                 *uuid.UUID
+	cleareduser          bool
+	tasks                map[uuid.UUID]struct{}
+	removedtasks         map[uuid.UUID]struct{}
+	clearedtasks         bool
+	templateTasks        map[uuid.UUID]struct{}
+	removedtemplateTasks map[uuid.UUID]struct{}
+	clearedtemplateTasks bool
+	done                 bool
+	oldValue             func(context.Context) (*Activity, error)
+	predicates           []predicate.Activity
 }
 
 var _ ent.Mutation = (*ActivityMutation)(nil)
@@ -454,6 +461,60 @@ func (m *ActivityMutation) ResetTasks() {
 	m.removedtasks = nil
 }
 
+// AddTemplateTaskIDs adds the "templateTasks" edge to the TemplateTask entity by ids.
+func (m *ActivityMutation) AddTemplateTaskIDs(ids ...uuid.UUID) {
+	if m.templateTasks == nil {
+		m.templateTasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.templateTasks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTemplateTasks clears the "templateTasks" edge to the TemplateTask entity.
+func (m *ActivityMutation) ClearTemplateTasks() {
+	m.clearedtemplateTasks = true
+}
+
+// TemplateTasksCleared reports if the "templateTasks" edge to the TemplateTask entity was cleared.
+func (m *ActivityMutation) TemplateTasksCleared() bool {
+	return m.clearedtemplateTasks
+}
+
+// RemoveTemplateTaskIDs removes the "templateTasks" edge to the TemplateTask entity by IDs.
+func (m *ActivityMutation) RemoveTemplateTaskIDs(ids ...uuid.UUID) {
+	if m.removedtemplateTasks == nil {
+		m.removedtemplateTasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.templateTasks, ids[i])
+		m.removedtemplateTasks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTemplateTasks returns the removed IDs of the "templateTasks" edge to the TemplateTask entity.
+func (m *ActivityMutation) RemovedTemplateTasksIDs() (ids []uuid.UUID) {
+	for id := range m.removedtemplateTasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TemplateTasksIDs returns the "templateTasks" edge IDs in the mutation.
+func (m *ActivityMutation) TemplateTasksIDs() (ids []uuid.UUID) {
+	for id := range m.templateTasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTemplateTasks resets all changes to the "templateTasks" edge.
+func (m *ActivityMutation) ResetTemplateTasks() {
+	m.templateTasks = nil
+	m.clearedtemplateTasks = false
+	m.removedtemplateTasks = nil
+}
+
 // Where appends a list predicates to the ActivityMutation builder.
 func (m *ActivityMutation) Where(ps ...predicate.Activity) {
 	m.predicates = append(m.predicates, ps...)
@@ -670,12 +731,15 @@ func (m *ActivityMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *ActivityMutation) AddedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.user != nil {
 		edges = append(edges, activity.EdgeUser)
 	}
 	if m.tasks != nil {
 		edges = append(edges, activity.EdgeTasks)
+	}
+	if m.templateTasks != nil {
+		edges = append(edges, activity.EdgeTemplateTasks)
 	}
 	return edges
 }
@@ -694,15 +758,24 @@ func (m *ActivityMutation) AddedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case activity.EdgeTemplateTasks:
+		ids := make([]ent.Value, 0, len(m.templateTasks))
+		for id := range m.templateTasks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *ActivityMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.removedtasks != nil {
 		edges = append(edges, activity.EdgeTasks)
+	}
+	if m.removedtemplateTasks != nil {
+		edges = append(edges, activity.EdgeTemplateTasks)
 	}
 	return edges
 }
@@ -717,18 +790,27 @@ func (m *ActivityMutation) RemovedIDs(name string) []ent.Value {
 			ids = append(ids, id)
 		}
 		return ids
+	case activity.EdgeTemplateTasks:
+		ids := make([]ent.Value, 0, len(m.removedtemplateTasks))
+		for id := range m.removedtemplateTasks {
+			ids = append(ids, id)
+		}
+		return ids
 	}
 	return nil
 }
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *ActivityMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 2)
+	edges := make([]string, 0, 3)
 	if m.cleareduser {
 		edges = append(edges, activity.EdgeUser)
 	}
 	if m.clearedtasks {
 		edges = append(edges, activity.EdgeTasks)
+	}
+	if m.clearedtemplateTasks {
+		edges = append(edges, activity.EdgeTemplateTasks)
 	}
 	return edges
 }
@@ -741,6 +823,8 @@ func (m *ActivityMutation) EdgeCleared(name string) bool {
 		return m.cleareduser
 	case activity.EdgeTasks:
 		return m.clearedtasks
+	case activity.EdgeTemplateTasks:
+		return m.clearedtemplateTasks
 	}
 	return false
 }
@@ -765,6 +849,9 @@ func (m *ActivityMutation) ResetEdge(name string) error {
 		return nil
 	case activity.EdgeTasks:
 		m.ResetTasks()
+		return nil
+	case activity.EdgeTemplateTasks:
+		m.ResetTemplateTasks()
 		return nil
 	}
 	return fmt.Errorf("unknown Activity edge %s", name)
@@ -1336,6 +1423,1092 @@ func (m *TaskMutation) ResetEdge(name string) error {
 	return fmt.Errorf("unknown Task edge %s", name)
 }
 
+// TemplateMutation represents an operation that mutates the Template nodes in the graph.
+type TemplateMutation struct {
+	config
+	op                   Op
+	typ                  string
+	id                   *uuid.UUID
+	creationDate         *time.Time
+	name                 *string
+	clearedFields        map[string]struct{}
+	user                 *uuid.UUID
+	cleareduser          bool
+	templateTasks        map[uuid.UUID]struct{}
+	removedtemplateTasks map[uuid.UUID]struct{}
+	clearedtemplateTasks bool
+	done                 bool
+	oldValue             func(context.Context) (*Template, error)
+	predicates           []predicate.Template
+}
+
+var _ ent.Mutation = (*TemplateMutation)(nil)
+
+// templateOption allows management of the mutation configuration using functional options.
+type templateOption func(*TemplateMutation)
+
+// newTemplateMutation creates new mutation for the Template entity.
+func newTemplateMutation(c config, op Op, opts ...templateOption) *TemplateMutation {
+	m := &TemplateMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTemplate,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTemplateID sets the ID field of the mutation.
+func withTemplateID(id uuid.UUID) templateOption {
+	return func(m *TemplateMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *Template
+		)
+		m.oldValue = func(ctx context.Context) (*Template, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().Template.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTemplate sets the old Template of the mutation.
+func withTemplate(node *Template) templateOption {
+	return func(m *TemplateMutation) {
+		m.oldValue = func(context.Context) (*Template, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TemplateMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TemplateMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of Template entities.
+func (m *TemplateMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TemplateMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TemplateMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().Template.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreationDate sets the "creationDate" field.
+func (m *TemplateMutation) SetCreationDate(t time.Time) {
+	m.creationDate = &t
+}
+
+// CreationDate returns the value of the "creationDate" field in the mutation.
+func (m *TemplateMutation) CreationDate() (r time.Time, exists bool) {
+	v := m.creationDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreationDate returns the old "creationDate" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateMutation) OldCreationDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreationDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreationDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreationDate: %w", err)
+	}
+	return oldValue.CreationDate, nil
+}
+
+// ResetCreationDate resets all changes to the "creationDate" field.
+func (m *TemplateMutation) ResetCreationDate() {
+	m.creationDate = nil
+}
+
+// SetName sets the "name" field.
+func (m *TemplateMutation) SetName(s string) {
+	m.name = &s
+}
+
+// Name returns the value of the "name" field in the mutation.
+func (m *TemplateMutation) Name() (r string, exists bool) {
+	v := m.name
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldName returns the old "name" field's value of the Template entity.
+// If the Template object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateMutation) OldName(ctx context.Context) (v string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldName is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldName requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldName: %w", err)
+	}
+	return oldValue.Name, nil
+}
+
+// ResetName resets all changes to the "name" field.
+func (m *TemplateMutation) ResetName() {
+	m.name = nil
+}
+
+// SetUserID sets the "user" edge to the User entity by id.
+func (m *TemplateMutation) SetUserID(id uuid.UUID) {
+	m.user = &id
+}
+
+// ClearUser clears the "user" edge to the User entity.
+func (m *TemplateMutation) ClearUser() {
+	m.cleareduser = true
+}
+
+// UserCleared reports if the "user" edge to the User entity was cleared.
+func (m *TemplateMutation) UserCleared() bool {
+	return m.cleareduser
+}
+
+// UserID returns the "user" edge ID in the mutation.
+func (m *TemplateMutation) UserID() (id uuid.UUID, exists bool) {
+	if m.user != nil {
+		return *m.user, true
+	}
+	return
+}
+
+// UserIDs returns the "user" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// UserID instead. It exists only for internal usage by the builders.
+func (m *TemplateMutation) UserIDs() (ids []uuid.UUID) {
+	if id := m.user; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetUser resets all changes to the "user" edge.
+func (m *TemplateMutation) ResetUser() {
+	m.user = nil
+	m.cleareduser = false
+}
+
+// AddTemplateTaskIDs adds the "templateTasks" edge to the TemplateTask entity by ids.
+func (m *TemplateMutation) AddTemplateTaskIDs(ids ...uuid.UUID) {
+	if m.templateTasks == nil {
+		m.templateTasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.templateTasks[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTemplateTasks clears the "templateTasks" edge to the TemplateTask entity.
+func (m *TemplateMutation) ClearTemplateTasks() {
+	m.clearedtemplateTasks = true
+}
+
+// TemplateTasksCleared reports if the "templateTasks" edge to the TemplateTask entity was cleared.
+func (m *TemplateMutation) TemplateTasksCleared() bool {
+	return m.clearedtemplateTasks
+}
+
+// RemoveTemplateTaskIDs removes the "templateTasks" edge to the TemplateTask entity by IDs.
+func (m *TemplateMutation) RemoveTemplateTaskIDs(ids ...uuid.UUID) {
+	if m.removedtemplateTasks == nil {
+		m.removedtemplateTasks = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.templateTasks, ids[i])
+		m.removedtemplateTasks[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTemplateTasks returns the removed IDs of the "templateTasks" edge to the TemplateTask entity.
+func (m *TemplateMutation) RemovedTemplateTasksIDs() (ids []uuid.UUID) {
+	for id := range m.removedtemplateTasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TemplateTasksIDs returns the "templateTasks" edge IDs in the mutation.
+func (m *TemplateMutation) TemplateTasksIDs() (ids []uuid.UUID) {
+	for id := range m.templateTasks {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTemplateTasks resets all changes to the "templateTasks" edge.
+func (m *TemplateMutation) ResetTemplateTasks() {
+	m.templateTasks = nil
+	m.clearedtemplateTasks = false
+	m.removedtemplateTasks = nil
+}
+
+// Where appends a list predicates to the TemplateMutation builder.
+func (m *TemplateMutation) Where(ps ...predicate.Template) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TemplateMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TemplateMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.Template, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TemplateMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TemplateMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (Template).
+func (m *TemplateMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TemplateMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.creationDate != nil {
+		fields = append(fields, template.FieldCreationDate)
+	}
+	if m.name != nil {
+		fields = append(fields, template.FieldName)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TemplateMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case template.FieldCreationDate:
+		return m.CreationDate()
+	case template.FieldName:
+		return m.Name()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TemplateMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case template.FieldCreationDate:
+		return m.OldCreationDate(ctx)
+	case template.FieldName:
+		return m.OldName(ctx)
+	}
+	return nil, fmt.Errorf("unknown Template field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TemplateMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case template.FieldCreationDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreationDate(v)
+		return nil
+	case template.FieldName:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetName(v)
+		return nil
+	}
+	return fmt.Errorf("unknown Template field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TemplateMutation) AddedFields() []string {
+	return nil
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TemplateMutation) AddedField(name string) (ent.Value, bool) {
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TemplateMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	}
+	return fmt.Errorf("unknown Template numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TemplateMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TemplateMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TemplateMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown Template nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TemplateMutation) ResetField(name string) error {
+	switch name {
+	case template.FieldCreationDate:
+		m.ResetCreationDate()
+		return nil
+	case template.FieldName:
+		m.ResetName()
+		return nil
+	}
+	return fmt.Errorf("unknown Template field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TemplateMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.user != nil {
+		edges = append(edges, template.EdgeUser)
+	}
+	if m.templateTasks != nil {
+		edges = append(edges, template.EdgeTemplateTasks)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TemplateMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case template.EdgeUser:
+		if id := m.user; id != nil {
+			return []ent.Value{*id}
+		}
+	case template.EdgeTemplateTasks:
+		ids := make([]ent.Value, 0, len(m.templateTasks))
+		for id := range m.templateTasks {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TemplateMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.removedtemplateTasks != nil {
+		edges = append(edges, template.EdgeTemplateTasks)
+	}
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TemplateMutation) RemovedIDs(name string) []ent.Value {
+	switch name {
+	case template.EdgeTemplateTasks:
+		ids := make([]ent.Value, 0, len(m.removedtemplateTasks))
+		for id := range m.removedtemplateTasks {
+			ids = append(ids, id)
+		}
+		return ids
+	}
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TemplateMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.cleareduser {
+		edges = append(edges, template.EdgeUser)
+	}
+	if m.clearedtemplateTasks {
+		edges = append(edges, template.EdgeTemplateTasks)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TemplateMutation) EdgeCleared(name string) bool {
+	switch name {
+	case template.EdgeUser:
+		return m.cleareduser
+	case template.EdgeTemplateTasks:
+		return m.clearedtemplateTasks
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TemplateMutation) ClearEdge(name string) error {
+	switch name {
+	case template.EdgeUser:
+		m.ClearUser()
+		return nil
+	}
+	return fmt.Errorf("unknown Template unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TemplateMutation) ResetEdge(name string) error {
+	switch name {
+	case template.EdgeUser:
+		m.ResetUser()
+		return nil
+	case template.EdgeTemplateTasks:
+		m.ResetTemplateTasks()
+		return nil
+	}
+	return fmt.Errorf("unknown Template edge %s", name)
+}
+
+// TemplateTaskMutation represents an operation that mutates the TemplateTask nodes in the graph.
+type TemplateTaskMutation struct {
+	config
+	op              Op
+	typ             string
+	id              *uuid.UUID
+	creationDate    *time.Time
+	weekDay         *int
+	addweekDay      *int
+	clearedFields   map[string]struct{}
+	activity        *uuid.UUID
+	clearedactivity bool
+	template        *uuid.UUID
+	clearedtemplate bool
+	done            bool
+	oldValue        func(context.Context) (*TemplateTask, error)
+	predicates      []predicate.TemplateTask
+}
+
+var _ ent.Mutation = (*TemplateTaskMutation)(nil)
+
+// templatetaskOption allows management of the mutation configuration using functional options.
+type templatetaskOption func(*TemplateTaskMutation)
+
+// newTemplateTaskMutation creates new mutation for the TemplateTask entity.
+func newTemplateTaskMutation(c config, op Op, opts ...templatetaskOption) *TemplateTaskMutation {
+	m := &TemplateTaskMutation{
+		config:        c,
+		op:            op,
+		typ:           TypeTemplateTask,
+		clearedFields: make(map[string]struct{}),
+	}
+	for _, opt := range opts {
+		opt(m)
+	}
+	return m
+}
+
+// withTemplateTaskID sets the ID field of the mutation.
+func withTemplateTaskID(id uuid.UUID) templatetaskOption {
+	return func(m *TemplateTaskMutation) {
+		var (
+			err   error
+			once  sync.Once
+			value *TemplateTask
+		)
+		m.oldValue = func(ctx context.Context) (*TemplateTask, error) {
+			once.Do(func() {
+				if m.done {
+					err = errors.New("querying old values post mutation is not allowed")
+				} else {
+					value, err = m.Client().TemplateTask.Get(ctx, id)
+				}
+			})
+			return value, err
+		}
+		m.id = &id
+	}
+}
+
+// withTemplateTask sets the old TemplateTask of the mutation.
+func withTemplateTask(node *TemplateTask) templatetaskOption {
+	return func(m *TemplateTaskMutation) {
+		m.oldValue = func(context.Context) (*TemplateTask, error) {
+			return node, nil
+		}
+		m.id = &node.ID
+	}
+}
+
+// Client returns a new `ent.Client` from the mutation. If the mutation was
+// executed in a transaction (ent.Tx), a transactional client is returned.
+func (m TemplateTaskMutation) Client() *Client {
+	client := &Client{config: m.config}
+	client.init()
+	return client
+}
+
+// Tx returns an `ent.Tx` for mutations that were executed in transactions;
+// it returns an error otherwise.
+func (m TemplateTaskMutation) Tx() (*Tx, error) {
+	if _, ok := m.driver.(*txDriver); !ok {
+		return nil, errors.New("ent: mutation is not running in a transaction")
+	}
+	tx := &Tx{config: m.config}
+	tx.init()
+	return tx, nil
+}
+
+// SetID sets the value of the id field. Note that this
+// operation is only accepted on creation of TemplateTask entities.
+func (m *TemplateTaskMutation) SetID(id uuid.UUID) {
+	m.id = &id
+}
+
+// ID returns the ID value in the mutation. Note that the ID is only available
+// if it was provided to the builder or after it was returned from the database.
+func (m *TemplateTaskMutation) ID() (id uuid.UUID, exists bool) {
+	if m.id == nil {
+		return
+	}
+	return *m.id, true
+}
+
+// IDs queries the database and returns the entity ids that match the mutation's predicate.
+// That means, if the mutation is applied within a transaction with an isolation level such
+// as sql.LevelSerializable, the returned ids match the ids of the rows that will be updated
+// or updated by the mutation.
+func (m *TemplateTaskMutation) IDs(ctx context.Context) ([]uuid.UUID, error) {
+	switch {
+	case m.op.Is(OpUpdateOne | OpDeleteOne):
+		id, exists := m.ID()
+		if exists {
+			return []uuid.UUID{id}, nil
+		}
+		fallthrough
+	case m.op.Is(OpUpdate | OpDelete):
+		return m.Client().TemplateTask.Query().Where(m.predicates...).IDs(ctx)
+	default:
+		return nil, fmt.Errorf("IDs is not allowed on %s operations", m.op)
+	}
+}
+
+// SetCreationDate sets the "creationDate" field.
+func (m *TemplateTaskMutation) SetCreationDate(t time.Time) {
+	m.creationDate = &t
+}
+
+// CreationDate returns the value of the "creationDate" field in the mutation.
+func (m *TemplateTaskMutation) CreationDate() (r time.Time, exists bool) {
+	v := m.creationDate
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldCreationDate returns the old "creationDate" field's value of the TemplateTask entity.
+// If the TemplateTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateTaskMutation) OldCreationDate(ctx context.Context) (v time.Time, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldCreationDate is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldCreationDate requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldCreationDate: %w", err)
+	}
+	return oldValue.CreationDate, nil
+}
+
+// ResetCreationDate resets all changes to the "creationDate" field.
+func (m *TemplateTaskMutation) ResetCreationDate() {
+	m.creationDate = nil
+}
+
+// SetWeekDay sets the "weekDay" field.
+func (m *TemplateTaskMutation) SetWeekDay(i int) {
+	m.weekDay = &i
+	m.addweekDay = nil
+}
+
+// WeekDay returns the value of the "weekDay" field in the mutation.
+func (m *TemplateTaskMutation) WeekDay() (r int, exists bool) {
+	v := m.weekDay
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldWeekDay returns the old "weekDay" field's value of the TemplateTask entity.
+// If the TemplateTask object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *TemplateTaskMutation) OldWeekDay(ctx context.Context) (v int, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldWeekDay is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldWeekDay requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldWeekDay: %w", err)
+	}
+	return oldValue.WeekDay, nil
+}
+
+// AddWeekDay adds i to the "weekDay" field.
+func (m *TemplateTaskMutation) AddWeekDay(i int) {
+	if m.addweekDay != nil {
+		*m.addweekDay += i
+	} else {
+		m.addweekDay = &i
+	}
+}
+
+// AddedWeekDay returns the value that was added to the "weekDay" field in this mutation.
+func (m *TemplateTaskMutation) AddedWeekDay() (r int, exists bool) {
+	v := m.addweekDay
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// ResetWeekDay resets all changes to the "weekDay" field.
+func (m *TemplateTaskMutation) ResetWeekDay() {
+	m.weekDay = nil
+	m.addweekDay = nil
+}
+
+// SetActivityID sets the "activity" edge to the Activity entity by id.
+func (m *TemplateTaskMutation) SetActivityID(id uuid.UUID) {
+	m.activity = &id
+}
+
+// ClearActivity clears the "activity" edge to the Activity entity.
+func (m *TemplateTaskMutation) ClearActivity() {
+	m.clearedactivity = true
+}
+
+// ActivityCleared reports if the "activity" edge to the Activity entity was cleared.
+func (m *TemplateTaskMutation) ActivityCleared() bool {
+	return m.clearedactivity
+}
+
+// ActivityID returns the "activity" edge ID in the mutation.
+func (m *TemplateTaskMutation) ActivityID() (id uuid.UUID, exists bool) {
+	if m.activity != nil {
+		return *m.activity, true
+	}
+	return
+}
+
+// ActivityIDs returns the "activity" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// ActivityID instead. It exists only for internal usage by the builders.
+func (m *TemplateTaskMutation) ActivityIDs() (ids []uuid.UUID) {
+	if id := m.activity; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetActivity resets all changes to the "activity" edge.
+func (m *TemplateTaskMutation) ResetActivity() {
+	m.activity = nil
+	m.clearedactivity = false
+}
+
+// SetTemplateID sets the "template" edge to the Template entity by id.
+func (m *TemplateTaskMutation) SetTemplateID(id uuid.UUID) {
+	m.template = &id
+}
+
+// ClearTemplate clears the "template" edge to the Template entity.
+func (m *TemplateTaskMutation) ClearTemplate() {
+	m.clearedtemplate = true
+}
+
+// TemplateCleared reports if the "template" edge to the Template entity was cleared.
+func (m *TemplateTaskMutation) TemplateCleared() bool {
+	return m.clearedtemplate
+}
+
+// TemplateID returns the "template" edge ID in the mutation.
+func (m *TemplateTaskMutation) TemplateID() (id uuid.UUID, exists bool) {
+	if m.template != nil {
+		return *m.template, true
+	}
+	return
+}
+
+// TemplateIDs returns the "template" edge IDs in the mutation.
+// Note that IDs always returns len(IDs) <= 1 for unique edges, and you should use
+// TemplateID instead. It exists only for internal usage by the builders.
+func (m *TemplateTaskMutation) TemplateIDs() (ids []uuid.UUID) {
+	if id := m.template; id != nil {
+		ids = append(ids, *id)
+	}
+	return
+}
+
+// ResetTemplate resets all changes to the "template" edge.
+func (m *TemplateTaskMutation) ResetTemplate() {
+	m.template = nil
+	m.clearedtemplate = false
+}
+
+// Where appends a list predicates to the TemplateTaskMutation builder.
+func (m *TemplateTaskMutation) Where(ps ...predicate.TemplateTask) {
+	m.predicates = append(m.predicates, ps...)
+}
+
+// WhereP appends storage-level predicates to the TemplateTaskMutation builder. Using this method,
+// users can use type-assertion to append predicates that do not depend on any generated package.
+func (m *TemplateTaskMutation) WhereP(ps ...func(*sql.Selector)) {
+	p := make([]predicate.TemplateTask, len(ps))
+	for i := range ps {
+		p[i] = ps[i]
+	}
+	m.Where(p...)
+}
+
+// Op returns the operation name.
+func (m *TemplateTaskMutation) Op() Op {
+	return m.op
+}
+
+// SetOp allows setting the mutation operation.
+func (m *TemplateTaskMutation) SetOp(op Op) {
+	m.op = op
+}
+
+// Type returns the node type of this mutation (TemplateTask).
+func (m *TemplateTaskMutation) Type() string {
+	return m.typ
+}
+
+// Fields returns all fields that were changed during this mutation. Note that in
+// order to get all numeric fields that were incremented/decremented, call
+// AddedFields().
+func (m *TemplateTaskMutation) Fields() []string {
+	fields := make([]string, 0, 2)
+	if m.creationDate != nil {
+		fields = append(fields, templatetask.FieldCreationDate)
+	}
+	if m.weekDay != nil {
+		fields = append(fields, templatetask.FieldWeekDay)
+	}
+	return fields
+}
+
+// Field returns the value of a field with the given name. The second boolean
+// return value indicates that this field was not set, or was not defined in the
+// schema.
+func (m *TemplateTaskMutation) Field(name string) (ent.Value, bool) {
+	switch name {
+	case templatetask.FieldCreationDate:
+		return m.CreationDate()
+	case templatetask.FieldWeekDay:
+		return m.WeekDay()
+	}
+	return nil, false
+}
+
+// OldField returns the old value of the field from the database. An error is
+// returned if the mutation operation is not UpdateOne, or the query to the
+// database failed.
+func (m *TemplateTaskMutation) OldField(ctx context.Context, name string) (ent.Value, error) {
+	switch name {
+	case templatetask.FieldCreationDate:
+		return m.OldCreationDate(ctx)
+	case templatetask.FieldWeekDay:
+		return m.OldWeekDay(ctx)
+	}
+	return nil, fmt.Errorf("unknown TemplateTask field %s", name)
+}
+
+// SetField sets the value of a field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TemplateTaskMutation) SetField(name string, value ent.Value) error {
+	switch name {
+	case templatetask.FieldCreationDate:
+		v, ok := value.(time.Time)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetCreationDate(v)
+		return nil
+	case templatetask.FieldWeekDay:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetWeekDay(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TemplateTask field %s", name)
+}
+
+// AddedFields returns all numeric fields that were incremented/decremented during
+// this mutation.
+func (m *TemplateTaskMutation) AddedFields() []string {
+	var fields []string
+	if m.addweekDay != nil {
+		fields = append(fields, templatetask.FieldWeekDay)
+	}
+	return fields
+}
+
+// AddedField returns the numeric value that was incremented/decremented on a field
+// with the given name. The second boolean return value indicates that this field
+// was not set, or was not defined in the schema.
+func (m *TemplateTaskMutation) AddedField(name string) (ent.Value, bool) {
+	switch name {
+	case templatetask.FieldWeekDay:
+		return m.AddedWeekDay()
+	}
+	return nil, false
+}
+
+// AddField adds the value to the field with the given name. It returns an error if
+// the field is not defined in the schema, or if the type mismatched the field
+// type.
+func (m *TemplateTaskMutation) AddField(name string, value ent.Value) error {
+	switch name {
+	case templatetask.FieldWeekDay:
+		v, ok := value.(int)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.AddWeekDay(v)
+		return nil
+	}
+	return fmt.Errorf("unknown TemplateTask numeric field %s", name)
+}
+
+// ClearedFields returns all nullable fields that were cleared during this
+// mutation.
+func (m *TemplateTaskMutation) ClearedFields() []string {
+	return nil
+}
+
+// FieldCleared returns a boolean indicating if a field with the given name was
+// cleared in this mutation.
+func (m *TemplateTaskMutation) FieldCleared(name string) bool {
+	_, ok := m.clearedFields[name]
+	return ok
+}
+
+// ClearField clears the value of the field with the given name. It returns an
+// error if the field is not defined in the schema.
+func (m *TemplateTaskMutation) ClearField(name string) error {
+	return fmt.Errorf("unknown TemplateTask nullable field %s", name)
+}
+
+// ResetField resets all changes in the mutation for the field with the given name.
+// It returns an error if the field is not defined in the schema.
+func (m *TemplateTaskMutation) ResetField(name string) error {
+	switch name {
+	case templatetask.FieldCreationDate:
+		m.ResetCreationDate()
+		return nil
+	case templatetask.FieldWeekDay:
+		m.ResetWeekDay()
+		return nil
+	}
+	return fmt.Errorf("unknown TemplateTask field %s", name)
+}
+
+// AddedEdges returns all edge names that were set/added in this mutation.
+func (m *TemplateTaskMutation) AddedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.activity != nil {
+		edges = append(edges, templatetask.EdgeActivity)
+	}
+	if m.template != nil {
+		edges = append(edges, templatetask.EdgeTemplate)
+	}
+	return edges
+}
+
+// AddedIDs returns all IDs (to other nodes) that were added for the given edge
+// name in this mutation.
+func (m *TemplateTaskMutation) AddedIDs(name string) []ent.Value {
+	switch name {
+	case templatetask.EdgeActivity:
+		if id := m.activity; id != nil {
+			return []ent.Value{*id}
+		}
+	case templatetask.EdgeTemplate:
+		if id := m.template; id != nil {
+			return []ent.Value{*id}
+		}
+	}
+	return nil
+}
+
+// RemovedEdges returns all edge names that were removed in this mutation.
+func (m *TemplateTaskMutation) RemovedEdges() []string {
+	edges := make([]string, 0, 2)
+	return edges
+}
+
+// RemovedIDs returns all IDs (to other nodes) that were removed for the edge with
+// the given name in this mutation.
+func (m *TemplateTaskMutation) RemovedIDs(name string) []ent.Value {
+	return nil
+}
+
+// ClearedEdges returns all edge names that were cleared in this mutation.
+func (m *TemplateTaskMutation) ClearedEdges() []string {
+	edges := make([]string, 0, 2)
+	if m.clearedactivity {
+		edges = append(edges, templatetask.EdgeActivity)
+	}
+	if m.clearedtemplate {
+		edges = append(edges, templatetask.EdgeTemplate)
+	}
+	return edges
+}
+
+// EdgeCleared returns a boolean which indicates if the edge with the given name
+// was cleared in this mutation.
+func (m *TemplateTaskMutation) EdgeCleared(name string) bool {
+	switch name {
+	case templatetask.EdgeActivity:
+		return m.clearedactivity
+	case templatetask.EdgeTemplate:
+		return m.clearedtemplate
+	}
+	return false
+}
+
+// ClearEdge clears the value of the edge with the given name. It returns an error
+// if that edge is not defined in the schema.
+func (m *TemplateTaskMutation) ClearEdge(name string) error {
+	switch name {
+	case templatetask.EdgeActivity:
+		m.ClearActivity()
+		return nil
+	case templatetask.EdgeTemplate:
+		m.ClearTemplate()
+		return nil
+	}
+	return fmt.Errorf("unknown TemplateTask unique edge %s", name)
+}
+
+// ResetEdge resets all changes to the edge with the given name in this mutation.
+// It returns an error if the edge is not defined in the schema.
+func (m *TemplateTaskMutation) ResetEdge(name string) error {
+	switch name {
+	case templatetask.EdgeActivity:
+		m.ResetActivity()
+		return nil
+	case templatetask.EdgeTemplate:
+		m.ResetTemplate()
+		return nil
+	}
+	return fmt.Errorf("unknown TemplateTask edge %s", name)
+}
+
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
@@ -1353,6 +2526,9 @@ type UserMutation struct {
 	activities        map[uuid.UUID]struct{}
 	removedactivities map[uuid.UUID]struct{}
 	clearedactivities bool
+	templates         map[uuid.UUID]struct{}
+	removedtemplates  map[uuid.UUID]struct{}
+	clearedtemplates  bool
 	codes             map[uuid.UUID]struct{}
 	removedcodes      map[uuid.UUID]struct{}
 	clearedcodes      bool
@@ -1758,6 +2934,60 @@ func (m *UserMutation) ResetActivities() {
 	m.removedactivities = nil
 }
 
+// AddTemplateIDs adds the "templates" edge to the Template entity by ids.
+func (m *UserMutation) AddTemplateIDs(ids ...uuid.UUID) {
+	if m.templates == nil {
+		m.templates = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		m.templates[ids[i]] = struct{}{}
+	}
+}
+
+// ClearTemplates clears the "templates" edge to the Template entity.
+func (m *UserMutation) ClearTemplates() {
+	m.clearedtemplates = true
+}
+
+// TemplatesCleared reports if the "templates" edge to the Template entity was cleared.
+func (m *UserMutation) TemplatesCleared() bool {
+	return m.clearedtemplates
+}
+
+// RemoveTemplateIDs removes the "templates" edge to the Template entity by IDs.
+func (m *UserMutation) RemoveTemplateIDs(ids ...uuid.UUID) {
+	if m.removedtemplates == nil {
+		m.removedtemplates = make(map[uuid.UUID]struct{})
+	}
+	for i := range ids {
+		delete(m.templates, ids[i])
+		m.removedtemplates[ids[i]] = struct{}{}
+	}
+}
+
+// RemovedTemplates returns the removed IDs of the "templates" edge to the Template entity.
+func (m *UserMutation) RemovedTemplatesIDs() (ids []uuid.UUID) {
+	for id := range m.removedtemplates {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// TemplatesIDs returns the "templates" edge IDs in the mutation.
+func (m *UserMutation) TemplatesIDs() (ids []uuid.UUID) {
+	for id := range m.templates {
+		ids = append(ids, id)
+	}
+	return
+}
+
+// ResetTemplates resets all changes to the "templates" edge.
+func (m *UserMutation) ResetTemplates() {
+	m.templates = nil
+	m.clearedtemplates = false
+	m.removedtemplates = nil
+}
+
 // AddCodeIDs adds the "codes" edge to the VerificationCode entity by ids.
 func (m *UserMutation) AddCodeIDs(ids ...uuid.UUID) {
 	if m.codes == nil {
@@ -2099,9 +3329,12 @@ func (m *UserMutation) ResetField(name string) error {
 
 // AddedEdges returns all edge names that were set/added in this mutation.
 func (m *UserMutation) AddedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.activities != nil {
 		edges = append(edges, user.EdgeActivities)
+	}
+	if m.templates != nil {
+		edges = append(edges, user.EdgeTemplates)
 	}
 	if m.codes != nil {
 		edges = append(edges, user.EdgeCodes)
@@ -2119,6 +3352,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 	case user.EdgeActivities:
 		ids := make([]ent.Value, 0, len(m.activities))
 		for id := range m.activities {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeTemplates:
+		ids := make([]ent.Value, 0, len(m.templates))
+		for id := range m.templates {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2140,9 +3379,12 @@ func (m *UserMutation) AddedIDs(name string) []ent.Value {
 
 // RemovedEdges returns all edge names that were removed in this mutation.
 func (m *UserMutation) RemovedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.removedactivities != nil {
 		edges = append(edges, user.EdgeActivities)
+	}
+	if m.removedtemplates != nil {
+		edges = append(edges, user.EdgeTemplates)
 	}
 	if m.removedcodes != nil {
 		edges = append(edges, user.EdgeCodes)
@@ -2160,6 +3402,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 	case user.EdgeActivities:
 		ids := make([]ent.Value, 0, len(m.removedactivities))
 		for id := range m.removedactivities {
+			ids = append(ids, id)
+		}
+		return ids
+	case user.EdgeTemplates:
+		ids := make([]ent.Value, 0, len(m.removedtemplates))
+		for id := range m.removedtemplates {
 			ids = append(ids, id)
 		}
 		return ids
@@ -2181,9 +3429,12 @@ func (m *UserMutation) RemovedIDs(name string) []ent.Value {
 
 // ClearedEdges returns all edge names that were cleared in this mutation.
 func (m *UserMutation) ClearedEdges() []string {
-	edges := make([]string, 0, 3)
+	edges := make([]string, 0, 4)
 	if m.clearedactivities {
 		edges = append(edges, user.EdgeActivities)
+	}
+	if m.clearedtemplates {
+		edges = append(edges, user.EdgeTemplates)
 	}
 	if m.clearedcodes {
 		edges = append(edges, user.EdgeCodes)
@@ -2200,6 +3451,8 @@ func (m *UserMutation) EdgeCleared(name string) bool {
 	switch name {
 	case user.EdgeActivities:
 		return m.clearedactivities
+	case user.EdgeTemplates:
+		return m.clearedtemplates
 	case user.EdgeCodes:
 		return m.clearedcodes
 	case user.EdgeTasks:
@@ -2222,6 +3475,9 @@ func (m *UserMutation) ResetEdge(name string) error {
 	switch name {
 	case user.EdgeActivities:
 		m.ResetActivities()
+		return nil
+	case user.EdgeTemplates:
+		m.ResetTemplates()
 		return nil
 	case user.EdgeCodes:
 		m.ResetCodes()

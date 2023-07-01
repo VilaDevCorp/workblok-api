@@ -12,6 +12,8 @@ import (
 
 	"sensei/ent/activity"
 	"sensei/ent/task"
+	"sensei/ent/template"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 
@@ -31,6 +33,10 @@ type Client struct {
 	Activity *ActivityClient
 	// Task is the client for interacting with the Task builders.
 	Task *TaskClient
+	// Template is the client for interacting with the Template builders.
+	Template *TemplateClient
+	// TemplateTask is the client for interacting with the TemplateTask builders.
+	TemplateTask *TemplateTaskClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// VerificationCode is the client for interacting with the VerificationCode builders.
@@ -50,6 +56,8 @@ func (c *Client) init() {
 	c.Schema = migrate.NewSchema(c.driver)
 	c.Activity = NewActivityClient(c.config)
 	c.Task = NewTaskClient(c.config)
+	c.Template = NewTemplateClient(c.config)
+	c.TemplateTask = NewTemplateTaskClient(c.config)
 	c.User = NewUserClient(c.config)
 	c.VerificationCode = NewVerificationCodeClient(c.config)
 }
@@ -136,6 +144,8 @@ func (c *Client) Tx(ctx context.Context) (*Tx, error) {
 		config:           cfg,
 		Activity:         NewActivityClient(cfg),
 		Task:             NewTaskClient(cfg),
+		Template:         NewTemplateClient(cfg),
+		TemplateTask:     NewTemplateTaskClient(cfg),
 		User:             NewUserClient(cfg),
 		VerificationCode: NewVerificationCodeClient(cfg),
 	}, nil
@@ -159,6 +169,8 @@ func (c *Client) BeginTx(ctx context.Context, opts *sql.TxOptions) (*Tx, error) 
 		config:           cfg,
 		Activity:         NewActivityClient(cfg),
 		Task:             NewTaskClient(cfg),
+		Template:         NewTemplateClient(cfg),
+		TemplateTask:     NewTemplateTaskClient(cfg),
 		User:             NewUserClient(cfg),
 		VerificationCode: NewVerificationCodeClient(cfg),
 	}, nil
@@ -189,19 +201,21 @@ func (c *Client) Close() error {
 // Use adds the mutation hooks to all the entity clients.
 // In order to add hooks to a specific client, call: `client.Node.Use(...)`.
 func (c *Client) Use(hooks ...Hook) {
-	c.Activity.Use(hooks...)
-	c.Task.Use(hooks...)
-	c.User.Use(hooks...)
-	c.VerificationCode.Use(hooks...)
+	for _, n := range []interface{ Use(...Hook) }{
+		c.Activity, c.Task, c.Template, c.TemplateTask, c.User, c.VerificationCode,
+	} {
+		n.Use(hooks...)
+	}
 }
 
 // Intercept adds the query interceptors to all the entity clients.
 // In order to add interceptors to a specific client, call: `client.Node.Intercept(...)`.
 func (c *Client) Intercept(interceptors ...Interceptor) {
-	c.Activity.Intercept(interceptors...)
-	c.Task.Intercept(interceptors...)
-	c.User.Intercept(interceptors...)
-	c.VerificationCode.Intercept(interceptors...)
+	for _, n := range []interface{ Intercept(...Interceptor) }{
+		c.Activity, c.Task, c.Template, c.TemplateTask, c.User, c.VerificationCode,
+	} {
+		n.Intercept(interceptors...)
+	}
 }
 
 // Mutate implements the ent.Mutator interface.
@@ -211,6 +225,10 @@ func (c *Client) Mutate(ctx context.Context, m Mutation) (Value, error) {
 		return c.Activity.mutate(ctx, m)
 	case *TaskMutation:
 		return c.Task.mutate(ctx, m)
+	case *TemplateMutation:
+		return c.Template.mutate(ctx, m)
+	case *TemplateTaskMutation:
+		return c.TemplateTask.mutate(ctx, m)
 	case *UserMutation:
 		return c.User.mutate(ctx, m)
 	case *VerificationCodeMutation:
@@ -338,6 +356,22 @@ func (c *ActivityClient) QueryTasks(a *Activity) *TaskQuery {
 			sqlgraph.From(activity.Table, activity.FieldID, id),
 			sqlgraph.To(task.Table, task.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, activity.TasksTable, activity.TasksColumn),
+		)
+		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTemplateTasks queries the templateTasks edge of a Activity.
+func (c *ActivityClient) QueryTemplateTasks(a *Activity) *TemplateTaskQuery {
+	query := (&TemplateTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := a.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(activity.Table, activity.FieldID, id),
+			sqlgraph.To(templatetask.Table, templatetask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, activity.TemplateTasksTable, activity.TemplateTasksColumn),
 		)
 		fromV = sqlgraph.Neighbors(a.driver.Dialect(), step)
 		return fromV, nil
@@ -520,6 +554,306 @@ func (c *TaskClient) mutate(ctx context.Context, m *TaskMutation) (Value, error)
 	}
 }
 
+// TemplateClient is a client for the Template schema.
+type TemplateClient struct {
+	config
+}
+
+// NewTemplateClient returns a client for the Template from the given config.
+func NewTemplateClient(c config) *TemplateClient {
+	return &TemplateClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `template.Hooks(f(g(h())))`.
+func (c *TemplateClient) Use(hooks ...Hook) {
+	c.hooks.Template = append(c.hooks.Template, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `template.Intercept(f(g(h())))`.
+func (c *TemplateClient) Intercept(interceptors ...Interceptor) {
+	c.inters.Template = append(c.inters.Template, interceptors...)
+}
+
+// Create returns a builder for creating a Template entity.
+func (c *TemplateClient) Create() *TemplateCreate {
+	mutation := newTemplateMutation(c.config, OpCreate)
+	return &TemplateCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of Template entities.
+func (c *TemplateClient) CreateBulk(builders ...*TemplateCreate) *TemplateCreateBulk {
+	return &TemplateCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for Template.
+func (c *TemplateClient) Update() *TemplateUpdate {
+	mutation := newTemplateMutation(c.config, OpUpdate)
+	return &TemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TemplateClient) UpdateOne(t *Template) *TemplateUpdateOne {
+	mutation := newTemplateMutation(c.config, OpUpdateOne, withTemplate(t))
+	return &TemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TemplateClient) UpdateOneID(id uuid.UUID) *TemplateUpdateOne {
+	mutation := newTemplateMutation(c.config, OpUpdateOne, withTemplateID(id))
+	return &TemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for Template.
+func (c *TemplateClient) Delete() *TemplateDelete {
+	mutation := newTemplateMutation(c.config, OpDelete)
+	return &TemplateDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TemplateClient) DeleteOne(t *Template) *TemplateDeleteOne {
+	return c.DeleteOneID(t.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TemplateClient) DeleteOneID(id uuid.UUID) *TemplateDeleteOne {
+	builder := c.Delete().Where(template.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TemplateDeleteOne{builder}
+}
+
+// Query returns a query builder for Template.
+func (c *TemplateClient) Query() *TemplateQuery {
+	return &TemplateQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTemplate},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a Template entity by its id.
+func (c *TemplateClient) Get(ctx context.Context, id uuid.UUID) (*Template, error) {
+	return c.Query().Where(template.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TemplateClient) GetX(ctx context.Context, id uuid.UUID) *Template {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryUser queries the user edge of a Template.
+func (c *TemplateClient) QueryUser(t *Template) *UserQuery {
+	query := (&UserClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(template.Table, template.FieldID, id),
+			sqlgraph.To(user.Table, user.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, template.UserTable, template.UserColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTemplateTasks queries the templateTasks edge of a Template.
+func (c *TemplateClient) QueryTemplateTasks(t *Template) *TemplateTaskQuery {
+	query := (&TemplateTaskClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := t.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(template.Table, template.FieldID, id),
+			sqlgraph.To(templatetask.Table, templatetask.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, template.TemplateTasksTable, template.TemplateTasksColumn),
+		)
+		fromV = sqlgraph.Neighbors(t.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TemplateClient) Hooks() []Hook {
+	return c.hooks.Template
+}
+
+// Interceptors returns the client interceptors.
+func (c *TemplateClient) Interceptors() []Interceptor {
+	return c.inters.Template
+}
+
+func (c *TemplateClient) mutate(ctx context.Context, m *TemplateMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TemplateCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TemplateUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TemplateUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TemplateDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown Template mutation op: %q", m.Op())
+	}
+}
+
+// TemplateTaskClient is a client for the TemplateTask schema.
+type TemplateTaskClient struct {
+	config
+}
+
+// NewTemplateTaskClient returns a client for the TemplateTask from the given config.
+func NewTemplateTaskClient(c config) *TemplateTaskClient {
+	return &TemplateTaskClient{config: c}
+}
+
+// Use adds a list of mutation hooks to the hooks stack.
+// A call to `Use(f, g, h)` equals to `templatetask.Hooks(f(g(h())))`.
+func (c *TemplateTaskClient) Use(hooks ...Hook) {
+	c.hooks.TemplateTask = append(c.hooks.TemplateTask, hooks...)
+}
+
+// Intercept adds a list of query interceptors to the interceptors stack.
+// A call to `Intercept(f, g, h)` equals to `templatetask.Intercept(f(g(h())))`.
+func (c *TemplateTaskClient) Intercept(interceptors ...Interceptor) {
+	c.inters.TemplateTask = append(c.inters.TemplateTask, interceptors...)
+}
+
+// Create returns a builder for creating a TemplateTask entity.
+func (c *TemplateTaskClient) Create() *TemplateTaskCreate {
+	mutation := newTemplateTaskMutation(c.config, OpCreate)
+	return &TemplateTaskCreate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// CreateBulk returns a builder for creating a bulk of TemplateTask entities.
+func (c *TemplateTaskClient) CreateBulk(builders ...*TemplateTaskCreate) *TemplateTaskCreateBulk {
+	return &TemplateTaskCreateBulk{config: c.config, builders: builders}
+}
+
+// Update returns an update builder for TemplateTask.
+func (c *TemplateTaskClient) Update() *TemplateTaskUpdate {
+	mutation := newTemplateTaskMutation(c.config, OpUpdate)
+	return &TemplateTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOne returns an update builder for the given entity.
+func (c *TemplateTaskClient) UpdateOne(tt *TemplateTask) *TemplateTaskUpdateOne {
+	mutation := newTemplateTaskMutation(c.config, OpUpdateOne, withTemplateTask(tt))
+	return &TemplateTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// UpdateOneID returns an update builder for the given id.
+func (c *TemplateTaskClient) UpdateOneID(id uuid.UUID) *TemplateTaskUpdateOne {
+	mutation := newTemplateTaskMutation(c.config, OpUpdateOne, withTemplateTaskID(id))
+	return &TemplateTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// Delete returns a delete builder for TemplateTask.
+func (c *TemplateTaskClient) Delete() *TemplateTaskDelete {
+	mutation := newTemplateTaskMutation(c.config, OpDelete)
+	return &TemplateTaskDelete{config: c.config, hooks: c.Hooks(), mutation: mutation}
+}
+
+// DeleteOne returns a builder for deleting the given entity.
+func (c *TemplateTaskClient) DeleteOne(tt *TemplateTask) *TemplateTaskDeleteOne {
+	return c.DeleteOneID(tt.ID)
+}
+
+// DeleteOneID returns a builder for deleting the given entity by its id.
+func (c *TemplateTaskClient) DeleteOneID(id uuid.UUID) *TemplateTaskDeleteOne {
+	builder := c.Delete().Where(templatetask.ID(id))
+	builder.mutation.id = &id
+	builder.mutation.op = OpDeleteOne
+	return &TemplateTaskDeleteOne{builder}
+}
+
+// Query returns a query builder for TemplateTask.
+func (c *TemplateTaskClient) Query() *TemplateTaskQuery {
+	return &TemplateTaskQuery{
+		config: c.config,
+		ctx:    &QueryContext{Type: TypeTemplateTask},
+		inters: c.Interceptors(),
+	}
+}
+
+// Get returns a TemplateTask entity by its id.
+func (c *TemplateTaskClient) Get(ctx context.Context, id uuid.UUID) (*TemplateTask, error) {
+	return c.Query().Where(templatetask.ID(id)).Only(ctx)
+}
+
+// GetX is like Get, but panics if an error occurs.
+func (c *TemplateTaskClient) GetX(ctx context.Context, id uuid.UUID) *TemplateTask {
+	obj, err := c.Get(ctx, id)
+	if err != nil {
+		panic(err)
+	}
+	return obj
+}
+
+// QueryActivity queries the activity edge of a TemplateTask.
+func (c *TemplateTaskClient) QueryActivity(tt *TemplateTask) *ActivityQuery {
+	query := (&ActivityClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(templatetask.Table, templatetask.FieldID, id),
+			sqlgraph.To(activity.Table, activity.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, templatetask.ActivityTable, templatetask.ActivityColumn),
+		)
+		fromV = sqlgraph.Neighbors(tt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTemplate queries the template edge of a TemplateTask.
+func (c *TemplateTaskClient) QueryTemplate(tt *TemplateTask) *TemplateQuery {
+	query := (&TemplateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := tt.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(templatetask.Table, templatetask.FieldID, id),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.M2O, true, templatetask.TemplateTable, templatetask.TemplateColumn),
+		)
+		fromV = sqlgraph.Neighbors(tt.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// Hooks returns the client hooks.
+func (c *TemplateTaskClient) Hooks() []Hook {
+	return c.hooks.TemplateTask
+}
+
+// Interceptors returns the client interceptors.
+func (c *TemplateTaskClient) Interceptors() []Interceptor {
+	return c.inters.TemplateTask
+}
+
+func (c *TemplateTaskClient) mutate(ctx context.Context, m *TemplateTaskMutation) (Value, error) {
+	switch m.Op() {
+	case OpCreate:
+		return (&TemplateTaskCreate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdate:
+		return (&TemplateTaskUpdate{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpUpdateOne:
+		return (&TemplateTaskUpdateOne{config: c.config, hooks: c.Hooks(), mutation: m}).Save(ctx)
+	case OpDelete, OpDeleteOne:
+		return (&TemplateTaskDelete{config: c.config, hooks: c.Hooks(), mutation: m}).Exec(ctx)
+	default:
+		return nil, fmt.Errorf("ent: unknown TemplateTask mutation op: %q", m.Op())
+	}
+}
+
 // UserClient is a client for the User schema.
 type UserClient struct {
 	config
@@ -622,6 +956,22 @@ func (c *UserClient) QueryActivities(u *User) *ActivityQuery {
 			sqlgraph.From(user.Table, user.FieldID, id),
 			sqlgraph.To(activity.Table, activity.FieldID),
 			sqlgraph.Edge(sqlgraph.O2M, false, user.ActivitiesTable, user.ActivitiesColumn),
+		)
+		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
+		return fromV, nil
+	}
+	return query
+}
+
+// QueryTemplates queries the templates edge of a User.
+func (c *UserClient) QueryTemplates(u *User) *TemplateQuery {
+	query := (&TemplateClient{config: c.config}).Query()
+	query.path = func(context.Context) (fromV *sql.Selector, _ error) {
+		id := u.ID
+		step := sqlgraph.NewStep(
+			sqlgraph.From(user.Table, user.FieldID, id),
+			sqlgraph.To(template.Table, template.FieldID),
+			sqlgraph.Edge(sqlgraph.O2M, false, user.TemplatesTable, user.TemplatesColumn),
 		)
 		fromV = sqlgraph.Neighbors(u.driver.Dialect(), step)
 		return fromV, nil
@@ -823,9 +1173,9 @@ func (c *VerificationCodeClient) mutate(ctx context.Context, m *VerificationCode
 // hooks and interceptors per client, for fast access.
 type (
 	hooks struct {
-		Activity, Task, User, VerificationCode []ent.Hook
+		Activity, Task, Template, TemplateTask, User, VerificationCode []ent.Hook
 	}
 	inters struct {
-		Activity, Task, User, VerificationCode []ent.Interceptor
+		Activity, Task, Template, TemplateTask, User, VerificationCode []ent.Interceptor
 	}
 )

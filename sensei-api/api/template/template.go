@@ -1,17 +1,17 @@
-package task
+package template
 
 import (
-	"net/http"
 	"sensei/svc"
-	"sensei/svc/task"
+	"sensei/svc/template"
 	"sensei/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
+	// "github.com/google/uuid"
 )
 
 func Create(c *gin.Context) {
-	var form task.CreateForm
+	var form template.CreateForm
 	err := c.ShouldBind(&form)
 	if err != nil {
 		res := utils.BadRequest(form, err)
@@ -19,7 +19,7 @@ func Create(c *gin.Context) {
 		return
 	}
 	svc := svc.Get()
-	result, err := svc.Task.Create(c.Request.Context(), form)
+	result, err := svc.Template.Create(c.Request.Context(), form)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -30,7 +30,7 @@ func Create(c *gin.Context) {
 }
 
 func Update(c *gin.Context) {
-	var form task.UpdateForm
+	var form template.UpdateForm
 	err := c.ShouldBind(&form)
 	if err != nil {
 		res := utils.BadRequest(form, err)
@@ -38,7 +38,7 @@ func Update(c *gin.Context) {
 		return
 	}
 	svc := svc.Get()
-	result, err := svc.Task.Update(c.Request.Context(), form)
+	result, err := svc.Template.Update(c.Request.Context(), form)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -57,7 +57,7 @@ func Get(c *gin.Context) {
 		return
 	}
 	svc := svc.Get()
-	result, err := svc.Task.Get(c.Request.Context(), parsedId)
+	result, err := svc.Template.Get(c.Request.Context(), parsedId)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -68,7 +68,7 @@ func Get(c *gin.Context) {
 }
 
 func Search(c *gin.Context) {
-	var form task.SearchForm
+	var form template.SearchForm
 	err := c.ShouldBind(&form)
 	if err != nil {
 		res := utils.BadRequest(form, err)
@@ -76,7 +76,7 @@ func Search(c *gin.Context) {
 		return
 	}
 	svc := svc.Get()
-	result, err := svc.Task.Search(c.Request.Context(), form)
+	result, err := svc.Template.Search(c.Request.Context(), form)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -87,7 +87,56 @@ func Search(c *gin.Context) {
 }
 
 func Delete(c *gin.Context) {
-	var form task.DeleteForm
+	var form template.DeleteForm
+	err := c.ShouldBind(&form)
+
+	if err != nil {
+		res := utils.BadRequest(form, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	templateIds := form.TemplateIds
+
+	svc := svc.Get()
+	err = svc.Template.Delete(c.Request.Context(), templateIds)
+	if err != nil {
+		res := utils.InternalError(err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	res := utils.OkDeleted()
+	c.JSON(res.Status, res.Result)
+}
+
+func CreateTask(c *gin.Context) {
+	var form template.CreateTaskForm
+	unparsedId, _ := c.Params.Get("id")
+	parsedId, err := uuid.Parse(unparsedId)
+	if err != nil {
+		res := utils.BadRequest(unparsedId, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+
+	err = c.ShouldBind(&form)
+	if err != nil {
+		res := utils.BadRequest(form, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	svc := svc.Get()
+	result, err := svc.Template.CreateTask(c.Request.Context(), parsedId, form)
+	if err != nil {
+		res := utils.InternalError(err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	res := utils.OkCreated(result)
+	c.JSON(res.Status, res.Result)
+}
+
+func DeleteTasks(c *gin.Context) {
+	var form template.DeleteTasksForm
 	err := c.ShouldBind(&form)
 
 	if err != nil {
@@ -98,7 +147,7 @@ func Delete(c *gin.Context) {
 	taskIds := form.TaskIds
 
 	svc := svc.Get()
-	err = svc.Task.Delete(c.Request.Context(), taskIds)
+	err = svc.Template.DeleteTasks(c.Request.Context(), taskIds)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -108,33 +157,29 @@ func Delete(c *gin.Context) {
 	c.JSON(res.Status, res.Result)
 }
 
-func Complete(c *gin.Context) {
-	var form task.CompleteForm
-	err := c.ShouldBind(&form)
+func ApplyTemplate(c *gin.Context) {
+	var form template.ApplyTemplateForm
+	unparsedId, _ := c.Params.Get("id")
+	parsedId, err := uuid.Parse(unparsedId)
+	if err != nil {
+		res := utils.BadRequest(unparsedId, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+
+	err = c.ShouldBind(&form)
 	if err != nil {
 		res := utils.BadRequest(form, err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
 	svc := svc.Get()
-	status, err := svc.Task.Complete(c.Request.Context(), form.TaskIds, form.IsCompleted)
-	if status == http.StatusInternalServerError {
+	err = svc.Template.ApplyTemplate(c.Request.Context(), parsedId, form)
+	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
-	if status == http.StatusConflict {
-		res := utils.TaskAlreadyCompleted()
-		c.AbortWithStatusJSON(res.Status, res.Result)
-		return
-	}
-	result := struct {
-		id         []uuid.UUID
-		isComplete bool
-	}{
-		id:         form.TaskIds,
-		isComplete: form.IsCompleted,
-	}
-	res := utils.OkOperation(result)
+	res := utils.OkOperation(nil)
 	c.JSON(res.Status, res.Result)
 }

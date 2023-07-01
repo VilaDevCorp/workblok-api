@@ -32,5 +32,6 @@ func (Activity) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("activities").Required().Unique(),
 		edge.To("tasks", Task.Type),
+		edge.To("templateTasks", TemplateTask.Type),
 	}
 }

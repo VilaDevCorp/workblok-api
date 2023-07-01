@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"sensei/ent/activity"
 	"sensei/ent/task"
+	"sensei/ent/template"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 	"time"
@@ -111,6 +112,21 @@ func (uc *UserCreate) AddActivities(a ...*Activity) *UserCreate {
 		ids[i] = a[i].ID
 	}
 	return uc.AddActivityIDs(ids...)
+}
+
+// AddTemplateIDs adds the "templates" edge to the Template entity by IDs.
+func (uc *UserCreate) AddTemplateIDs(ids ...uuid.UUID) *UserCreate {
+	uc.mutation.AddTemplateIDs(ids...)
+	return uc
+}
+
+// AddTemplates adds the "templates" edges to the Template entity.
+func (uc *UserCreate) AddTemplates(t ...*Template) *UserCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return uc.AddTemplateIDs(ids...)
 }
 
 // AddCodeIDs adds the "codes" edge to the VerificationCode entity by IDs.
@@ -299,6 +315,22 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(activity.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := uc.mutation.TemplatesIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   user.TemplatesTable,
+			Columns: []string{user.TemplatesColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(template.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

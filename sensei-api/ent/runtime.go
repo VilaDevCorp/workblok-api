@@ -6,6 +6,8 @@ import (
 	"sensei/ent/activity"
 	"sensei/ent/schema"
 	"sensei/ent/task"
+	"sensei/ent/template"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
 	"time"
@@ -55,6 +57,32 @@ func init() {
 	taskDescID := taskMixinFields0[0].Descriptor()
 	// task.DefaultID holds the default value on creation for the id field.
 	task.DefaultID = taskDescID.Default.(func() uuid.UUID)
+	templateMixin := schema.Template{}.Mixin()
+	templateMixinFields0 := templateMixin[0].Fields()
+	_ = templateMixinFields0
+	templateFields := schema.Template{}.Fields()
+	_ = templateFields
+	// templateDescCreationDate is the schema descriptor for creationDate field.
+	templateDescCreationDate := templateMixinFields0[1].Descriptor()
+	// template.DefaultCreationDate holds the default value on creation for the creationDate field.
+	template.DefaultCreationDate = templateDescCreationDate.Default.(func() time.Time)
+	// templateDescID is the schema descriptor for id field.
+	templateDescID := templateMixinFields0[0].Descriptor()
+	// template.DefaultID holds the default value on creation for the id field.
+	template.DefaultID = templateDescID.Default.(func() uuid.UUID)
+	templatetaskMixin := schema.TemplateTask{}.Mixin()
+	templatetaskMixinFields0 := templatetaskMixin[0].Fields()
+	_ = templatetaskMixinFields0
+	templatetaskFields := schema.TemplateTask{}.Fields()
+	_ = templatetaskFields
+	// templatetaskDescCreationDate is the schema descriptor for creationDate field.
+	templatetaskDescCreationDate := templatetaskMixinFields0[1].Descriptor()
+	// templatetask.DefaultCreationDate holds the default value on creation for the creationDate field.
+	templatetask.DefaultCreationDate = templatetaskDescCreationDate.Default.(func() time.Time)
+	// templatetaskDescID is the schema descriptor for id field.
+	templatetaskDescID := templatetaskMixinFields0[0].Descriptor()
+	// templatetask.DefaultID holds the default value on creation for the id field.
+	templatetask.DefaultID = templatetaskDescID.Default.(func() uuid.UUID)
 	userMixin := schema.User{}.Mixin()
 	userMixinFields0 := userMixin[0].Fields()
 	_ = userMixinFields0

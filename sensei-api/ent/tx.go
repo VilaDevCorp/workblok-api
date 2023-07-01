@@ -16,6 +16,10 @@ type Tx struct {
 	Activity *ActivityClient
 	// Task is the client for interacting with the Task builders.
 	Task *TaskClient
+	// Template is the client for interacting with the Template builders.
+	Template *TemplateClient
+	// TemplateTask is the client for interacting with the TemplateTask builders.
+	TemplateTask *TemplateTaskClient
 	// User is the client for interacting with the User builders.
 	User *UserClient
 	// VerificationCode is the client for interacting with the VerificationCode builders.
@@ -153,6 +157,8 @@ func (tx *Tx) Client() *Client {
 func (tx *Tx) init() {
 	tx.Activity = NewActivityClient(tx.config)
 	tx.Task = NewTaskClient(tx.config)
+	tx.Template = NewTemplateClient(tx.config)
+	tx.TemplateTask = NewTemplateTaskClient(tx.config)
 	tx.User = NewUserClient(tx.config)
 	tx.VerificationCode = NewVerificationCodeClient(tx.config)
 }

@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"sensei/ent/activity"
 	"sensei/ent/task"
+	"sensei/ent/templatetask"
 	"sensei/ent/user"
 	"time"
 
@@ -107,6 +108,21 @@ func (ac *ActivityCreate) AddTasks(t ...*Task) *ActivityCreate {
 		ids[i] = t[i].ID
 	}
 	return ac.AddTaskIDs(ids...)
+}
+
+// AddTemplateTaskIDs adds the "templateTasks" edge to the TemplateTask entity by IDs.
+func (ac *ActivityCreate) AddTemplateTaskIDs(ids ...uuid.UUID) *ActivityCreate {
+	ac.mutation.AddTemplateTaskIDs(ids...)
+	return ac
+}
+
+// AddTemplateTasks adds the "templateTasks" edges to the TemplateTask entity.
+func (ac *ActivityCreate) AddTemplateTasks(t ...*TemplateTask) *ActivityCreate {
+	ids := make([]uuid.UUID, len(t))
+	for i := range t {
+		ids[i] = t[i].ID
+	}
+	return ac.AddTemplateTaskIDs(ids...)
 }
 
 // Mutation returns the ActivityMutation object of the builder.
@@ -264,6 +280,22 @@ func (ac *ActivityCreate) createSpec() (*Activity, *sqlgraph.CreateSpec) {
 			Bidi:    false,
 			Target: &sqlgraph.EdgeTarget{
 				IDSpec: sqlgraph.NewFieldSpec(task.FieldID, field.TypeUUID),
+			},
+		}
+		for _, k := range nodes {
+			edge.Target.Nodes = append(edge.Target.Nodes, k)
+		}
+		_spec.Edges = append(_spec.Edges, edge)
+	}
+	if nodes := ac.mutation.TemplateTasksIDs(); len(nodes) > 0 {
+		edge := &sqlgraph.EdgeSpec{
+			Rel:     sqlgraph.O2M,
+			Inverse: false,
+			Table:   activity.TemplateTasksTable,
+			Columns: []string{activity.TemplateTasksColumn},
+			Bidi:    false,
+			Target: &sqlgraph.EdgeTarget{
+				IDSpec: sqlgraph.NewFieldSpec(templatetask.FieldID, field.TypeUUID),
 			},
 		}
 		for _, k := range nodes {

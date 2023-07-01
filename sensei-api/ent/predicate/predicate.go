@@ -12,6 +12,12 @@ type Activity func(*sql.Selector)
 // Task is the predicate function for task builders.
 type Task func(*sql.Selector)
 
+// Template is the predicate function for template builders.
+type Template func(*sql.Selector)
+
+// TemplateTask is the predicate function for templatetask builders.
+type TemplateTask func(*sql.Selector)
+
 // User is the predicate function for user builders.
 type User func(*sql.Selector)
 
