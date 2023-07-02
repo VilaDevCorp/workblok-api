@@ -73,3 +73,7 @@ func VerificationCodeNotMatch() HttpResponse {
 func ExpiredCode() HttpResponse {
 	return HttpResponse{Status: http.StatusGone, Result: ResponseResult{Message: "The verification code has expired"}}
 }
+
+func DuplicatedKey(errCode string) HttpResponse {
+	return HttpResponse{Status: http.StatusConflict, Result: ResponseResult{Message: "Duplicated key", ErrCode: errCode}}
+}

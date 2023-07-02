@@ -69,9 +69,6 @@ func (s *Store) UseCode(ctx context.Context, form UseForm) utils.HttpResponse {
 	conditions = append(conditions, verificationcode.HasUserWith(userCondition...))
 	conditions = append(conditions, verificationcode.TypeEQ(form.Type))
 	verificationCode, err := query.Where(verificationcode.And(conditions...)).First(ctx)
-
-	fmt.Println(verificationCode.Code)
-	fmt.Println(verificationCode.ExpireDate)
 	if err != nil {
 		return utils.NotFoundEntity(form.Mail)
 	}

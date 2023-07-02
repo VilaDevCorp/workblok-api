@@ -84,6 +84,18 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 	}
 	bytesPass, err := bcrypt.GenerateFromPassword([]byte(form.Password), 14)
 
+	alreadyExistUser, err := s.DB.User.Query().Where(user.UsernameEQ(form.UserName)).First(ctx)
+	if alreadyExistUser != nil {
+		res := utils.DuplicatedKey("user")
+		return res
+	}
+	alreadyExistMail, err := s.DB.User.Query().Where(user.MailEQ(form.Mail)).First(ctx)
+	if alreadyExistMail != nil {
+		res := utils.DuplicatedKey("mail")
+		return res
+
+	}
+
 	user, err := s.DB.User.Create().SetUsername(form.UserName).SetPassword(string(bytesPass[:])).SetMail(form.Mail).Save(ctx)
 	if err != nil {
 		res := utils.InternalError(err)
