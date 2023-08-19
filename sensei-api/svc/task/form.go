@@ -33,3 +33,10 @@ type CompleteForm struct {
 type DeleteForm struct {
 	TaskIds []uuid.UUID `json:"taskIds"`
 }
+
+type StatsForm struct {
+	UserId *uuid.UUID `json:"userId"`
+	Year   *int       `json:"year"`
+	Month  *int       `json:"month"`
+	Week   *int       `json:"week"`
+}

@@ -138,3 +138,22 @@ func Complete(c *gin.Context) {
 	res := utils.OkOperation(result)
 	c.JSON(res.Status, res.Result)
 }
+
+func Stats(c *gin.Context) {
+	var form task.StatsForm
+	err := c.ShouldBind(&form)
+	if err != nil {
+		res := utils.BadRequest(form, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	svc := svc.Get()
+	result, err := svc.Task.Stats(c.Request.Context(), form)
+	if err != nil {
+		res := utils.InternalError(err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	res := utils.OkOperation(result)
+	c.JSON(res.Status, res.Result)
+}
