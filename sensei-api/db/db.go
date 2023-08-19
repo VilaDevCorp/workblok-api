@@ -1,9 +1,11 @@
 package db
 
 import (
+	"context"
 	"fmt"
 	"sensei/conf"
 	"sensei/ent"
+	"sensei/ent/migrate"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rs/zerolog/log"
@@ -21,6 +23,17 @@ func Setup() error {
 		log.Debug().Err(err).Msg("Failed opening connection to DB")
 		return err
 	}
+	ctx := context.Background()
+
+	err = db.Schema.Create(
+		ctx,
+		migrate.WithDropIndex(true),
+		migrate.WithDropColumn(true),
+	)
+	if err != nil {
+		log.Fatal().Msgf("failed creating schema resources: %v", err)
+	}
+
 	return nil
 }
 

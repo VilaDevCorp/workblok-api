@@ -4,12 +4,12 @@ package ent
 
 import (
 	"sensei/ent/activity"
-	"sensei/ent/schema"
 	"sensei/ent/task"
 	"sensei/ent/template"
 	"sensei/ent/templatetask"
 	"sensei/ent/user"
 	"sensei/ent/verificationcode"
+	"sensei/schema"
 	"time"
 
 	"github.com/google/uuid"
