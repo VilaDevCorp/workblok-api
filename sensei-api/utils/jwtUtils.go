@@ -30,7 +30,7 @@ func GenerateJWT(id string, mail string, username string, csrf string) (tokenStr
 		Username: username,
 		Csrf:     csrf,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "www.trainwithsensei.com",
+			Issuer:    "trainwithsensei.com",
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}

@@ -24,7 +24,7 @@ func Login(c *gin.Context) {
 	res, tokenString := svc.Auth.Login(c.Request.Context(), form)
 	if res.Status == http.StatusOK {
 		c.SetSameSite(http.SameSiteLaxMode)
-		c.SetCookie("JWT_TOKEN", *tokenString, 30*24*60*60*1000, "/", "www.trainwithsensei.com", false, false)
+		c.SetCookie("JWT_TOKEN", *tokenString, 30*24*60*60*1000, "/", "trainwithsensei.com", true, true)
 	}
 	fmt.Println(res.Status)
 	fmt.Println(res.Result)
