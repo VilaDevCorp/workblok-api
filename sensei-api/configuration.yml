@@ -8,7 +8,7 @@ Mail:
   SmtpPort: 587
  
 DB: 
-  Host: host.docker.internal
+  Host: 172.17.0.1
   Port: 3306
   User: root
   Pass: 1234

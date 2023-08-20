@@ -8,7 +8,7 @@ import (
 
 func Cors() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		c.Header("Access-Control-Allow-Origin", "http://www.coollocalhost.com:3000")
+		c.Header("Access-Control-Allow-Origin", "http://www.trainwithsensei.com:3000")
 		c.Header("Access-Control-Allow-Credentials", "true")
 		c.Header("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
 		c.Header("Access-Control-Allow-Headers", "Accept, Content-Type, credentials, Content-Length, Accept-Encoding, X-API-CSRF, Authorization")
