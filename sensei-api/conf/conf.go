@@ -10,11 +10,21 @@ import (
 )
 
 type Conf struct {
+	Env    string
+	Dev    EnvConf
+	Prod   EnvConf
 	IP     string
 	Port   string
 	DB     DatabaseConf
 	Mail   MailConf
 	JwtKey string
+}
+
+type EnvConf struct {
+	CookieHost     string
+	CookieSecure   bool
+	CookieHttpOnly bool
+	CorsHost       string
 }
 
 type DatabaseConf struct {

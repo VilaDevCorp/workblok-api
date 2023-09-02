@@ -3,6 +3,7 @@ package auth
 import (
 	"fmt"
 	"net/http"
+	"sensei/conf"
 	"sensei/mail"
 	"sensei/svc"
 	"sensei/svc/auth"
@@ -13,6 +14,7 @@ import (
 )
 
 func Login(c *gin.Context) {
+	conf := conf.Get()
 	var form auth.LoginForm
 	err := c.ShouldBind(&form)
 	if err != nil {
@@ -24,7 +26,11 @@ func Login(c *gin.Context) {
 	res, tokenString := svc.Auth.Login(c.Request.Context(), form)
 	if res.Status == http.StatusOK {
 		c.SetSameSite(http.SameSiteLaxMode)
-		c.SetCookie("JWT_TOKEN", *tokenString, 30*24*60*60*1000, "/", "trainwithsensei.com", true, true)
+		if conf.Env == "prod" {
+			c.SetCookie("JWT_TOKEN", *tokenString, 30*24*60*60*1000, "/", conf.Prod.CookieHost, conf.Prod.CookieSecure, conf.Prod.CookieHttpOnly)
+		} else {
+			c.SetCookie("JWT_TOKEN", *tokenString, 30*24*60*60*1000, "/", conf.Dev.CookieHost, conf.Dev.CookieSecure, conf.Dev.CookieHttpOnly)
+		}
 	}
 	fmt.Println(res.Status)
 	fmt.Println(res.Result)

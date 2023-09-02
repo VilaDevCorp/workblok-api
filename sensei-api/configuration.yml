@@ -1,3 +1,14 @@
+Env: dev
+Dev:
+  CookieHost: www.coollocalhost.com
+  CookieSecure: false
+  HttpOnly: false
+  CorsHost: http://www.coollocalhost.com:3000
+Prod:
+  CookieHost: trainwithsensei.com
+  CookieSecure: true
+  HttpOnly: true
+  CorsHost: https://trainwithsensei.com:3000
 IP: 0.0.0.0
 Port: 8080
 JwtKey: sEnSeI258SECRETkey
@@ -6,10 +17,9 @@ Mail:
   Pass: emaddwcfyqjexjum
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
- 
-DB: 
-  Host: 172.17.0.1
+DB:
   Port: 3306
+  Host: db
   User: root
   Pass: 1234
   DB: sensei

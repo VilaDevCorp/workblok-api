@@ -24,13 +24,17 @@ func GenerateJWT(id string, mail string, username string, csrf string) (tokenStr
 	fmt.Println(expirationTime)
 	fmt.Println(jwt.NewNumericDate(expirationTime))
 	uuidId, _ := uuid.Parse(id)
+	issuer := conf.Dev.CookieHost
+	if conf.Env == "prod" {
+		issuer = conf.Prod.CookieHost
+	}
 	claims := &JWTClaim{
 		Id:       uuidId,
 		Mail:     mail,
 		Username: username,
 		Csrf:     csrf,
 		RegisteredClaims: jwt.RegisteredClaims{
-			Issuer:    "trainwithsensei.com",
+			Issuer:    issuer,
 			ExpiresAt: jwt.NewNumericDate(expirationTime),
 		},
 	}
