@@ -1,9 +1,9 @@
 Env: dev
 Dev:
-  CookieHost: www.coollocalhost.com
+  CookieHost: 192.168.0.15
   CookieSecure: false
   HttpOnly: false
-  CorsHost: http://www.coollocalhost.com:3000
+  CorsHost: http://192.168.0.15:3000
 Prod:
   CookieHost: trainwithsensei.com
   CookieSecure: true

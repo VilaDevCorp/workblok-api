@@ -105,8 +105,11 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 	code := rand.Intn((1000000))
 	codeStr := fmt.Sprintf("%06d", code)
 
-	s.DB.VerificationCode.Create().SetUserID(user.ID).SetExpireDate(expireDate).SetType(utils.VALIDATION_TYPE).SetCode(codeStr).Save(ctx)
-	err = mail.SendMail("davidvilas@gmail.com", fmt.Sprintf("To validate the account you can use the code %s", codeStr))
+	_, err = s.DB.VerificationCode.Create().SetUserID(user.ID).SetExpireDate(expireDate).SetType(utils.VALIDATION_TYPE).SetCode(codeStr).SetValid(true).Save(ctx)
+	fmt.Println(err)
+	if err == nil {
+		err = mail.SendMail("davidvilas@gmail.com", fmt.Sprintf("To validate the account you can use the code %s", codeStr))
+	}
 	res := utils.OkCreated(user)
 	return res
 
