@@ -241,6 +241,16 @@ func DescriptionHasSuffix(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldHasSuffix(FieldDescription, v))
 }
 
+// DescriptionIsNil applies the IsNil predicate on the "description" field.
+func DescriptionIsNil() predicate.Activity {
+	return predicate.Activity(sql.FieldIsNull(FieldDescription))
+}
+
+// DescriptionNotNil applies the NotNil predicate on the "description" field.
+func DescriptionNotNil() predicate.Activity {
+	return predicate.Activity(sql.FieldNotNull(FieldDescription))
+}
+
 // DescriptionEqualFold applies the EqualFold predicate on the "description" field.
 func DescriptionEqualFold(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldEqualFold(FieldDescription, v))
@@ -304,6 +314,16 @@ func IconHasPrefix(v string) predicate.Activity {
 // IconHasSuffix applies the HasSuffix predicate on the "icon" field.
 func IconHasSuffix(v string) predicate.Activity {
 	return predicate.Activity(sql.FieldHasSuffix(FieldIcon, v))
+}
+
+// IconIsNil applies the IsNil predicate on the "icon" field.
+func IconIsNil() predicate.Activity {
+	return predicate.Activity(sql.FieldIsNull(FieldIcon))
+}
+
+// IconNotNil applies the NotNil predicate on the "icon" field.
+func IconNotNil() predicate.Activity {
+	return predicate.Activity(sql.FieldNotNull(FieldIcon))
 }
 
 // IconEqualFold applies the EqualFold predicate on the "icon" field.

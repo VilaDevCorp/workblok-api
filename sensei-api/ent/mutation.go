@@ -271,9 +271,22 @@ func (m *ActivityMutation) OldDescription(ctx context.Context) (v string, err er
 	return oldValue.Description, nil
 }
 
+// ClearDescription clears the value of the "description" field.
+func (m *ActivityMutation) ClearDescription() {
+	m.description = nil
+	m.clearedFields[activity.FieldDescription] = struct{}{}
+}
+
+// DescriptionCleared returns if the "description" field was cleared in this mutation.
+func (m *ActivityMutation) DescriptionCleared() bool {
+	_, ok := m.clearedFields[activity.FieldDescription]
+	return ok
+}
+
 // ResetDescription resets all changes to the "description" field.
 func (m *ActivityMutation) ResetDescription() {
 	m.description = nil
+	delete(m.clearedFields, activity.FieldDescription)
 }
 
 // SetIcon sets the "icon" field.
@@ -307,9 +320,22 @@ func (m *ActivityMutation) OldIcon(ctx context.Context) (v string, err error) {
 	return oldValue.Icon, nil
 }
 
+// ClearIcon clears the value of the "icon" field.
+func (m *ActivityMutation) ClearIcon() {
+	m.icon = nil
+	m.clearedFields[activity.FieldIcon] = struct{}{}
+}
+
+// IconCleared returns if the "icon" field was cleared in this mutation.
+func (m *ActivityMutation) IconCleared() bool {
+	_, ok := m.clearedFields[activity.FieldIcon]
+	return ok
+}
+
 // ResetIcon resets all changes to the "icon" field.
 func (m *ActivityMutation) ResetIcon() {
 	m.icon = nil
+	delete(m.clearedFields, activity.FieldIcon)
 }
 
 // SetSize sets the "size" field.
@@ -690,7 +716,14 @@ func (m *ActivityMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *ActivityMutation) ClearedFields() []string {
-	return nil
+	var fields []string
+	if m.FieldCleared(activity.FieldDescription) {
+		fields = append(fields, activity.FieldDescription)
+	}
+	if m.FieldCleared(activity.FieldIcon) {
+		fields = append(fields, activity.FieldIcon)
+	}
+	return fields
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -703,6 +736,14 @@ func (m *ActivityMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *ActivityMutation) ClearField(name string) error {
+	switch name {
+	case activity.FieldDescription:
+		m.ClearDescription()
+		return nil
+	case activity.FieldIcon:
+		m.ClearIcon()
+		return nil
+	}
 	return fmt.Errorf("unknown Activity nullable field %s", name)
 }
 

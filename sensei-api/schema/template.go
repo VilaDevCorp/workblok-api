@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -28,6 +29,6 @@ func (Template) Fields() []ent.Field {
 func (Template) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("templates").Required().Unique(),
-		edge.To("templateTasks", TemplateTask.Type),
+		edge.To("templateTasks", TemplateTask.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }

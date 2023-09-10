@@ -2,6 +2,7 @@ package schema
 
 import (
 	"entgo.io/ent"
+	"entgo.io/ent/dialect/entsql"
 	"entgo.io/ent/schema/edge"
 	"entgo.io/ent/schema/field"
 )
@@ -21,8 +22,8 @@ func (Activity) Mixin() []ent.Mixin {
 func (Activity) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("name").NotEmpty(),
-		field.String("description"),
-		field.String("icon"),
+		field.String("description").Optional(),
+		field.String("icon").Optional(),
 		field.Int("size").Default(1),
 	}
 }
@@ -31,7 +32,7 @@ func (Activity) Fields() []ent.Field {
 func (Activity) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.From("user", User.Type).Ref("activities").Required().Unique(),
-		edge.To("tasks", Task.Type),
-		edge.To("templateTasks", TemplateTask.Type),
+		edge.To("tasks", Task.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
+		edge.To("templateTasks", TemplateTask.Type).Annotations(entsql.OnDelete(entsql.Cascade)),
 	}
 }

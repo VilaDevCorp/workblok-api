@@ -1,9 +1,9 @@
 Env: dev
 Dev:
-  CookieHost: 192.168.0.15
+  CookieHost: 192.168.0.19
   CookieSecure: false
   HttpOnly: false
-  CorsHost: http://192.168.0.15:3000
+  CorsHost: http://192.168.0.19:3000
 Prod:
   CookieHost: trainwithsensei.com
   CookieSecure: true

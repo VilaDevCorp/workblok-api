@@ -6,6 +6,7 @@ import (
 	"sensei/ent"
 	"sensei/ent/activity"
 	"sensei/ent/predicate"
+	"sensei/ent/user"
 	"sensei/utils"
 
 	"github.com/google/uuid"
@@ -66,6 +67,9 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	}
 	if form.Size != nil {
 		conditions = append(conditions, activity.SizeEQ(*form.Size))
+	}
+	if form.UserId != nil {
+		conditions = append(conditions, activity.HasUserWith(user.IDEQ(*form.UserId)))
 	}
 	totalRows, err := query.Where(activity.And(conditions...)).Count(ctx)
 	content, err := query.Where(activity.And(conditions...)).Offset(offset).Limit(limit).All(ctx)

@@ -14,8 +14,8 @@ var (
 		{Name: "id", Type: field.TypeUUID, Unique: true},
 		{Name: "creation_date", Type: field.TypeTime},
 		{Name: "name", Type: field.TypeString},
-		{Name: "description", Type: field.TypeString},
-		{Name: "icon", Type: field.TypeString},
+		{Name: "description", Type: field.TypeString, Nullable: true},
+		{Name: "icon", Type: field.TypeString, Nullable: true},
 		{Name: "size", Type: field.TypeInt, Default: 1},
 		{Name: "user_activities", Type: field.TypeUUID},
 	}
@@ -52,7 +52,7 @@ var (
 				Symbol:     "tasks_activities_tasks",
 				Columns:    []*schema.Column{TasksColumns[4]},
 				RefColumns: []*schema.Column{ActivitiesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "tasks_users_tasks",
@@ -101,13 +101,13 @@ var (
 				Symbol:     "template_tasks_activities_templateTasks",
 				Columns:    []*schema.Column{TemplateTasksColumns[3]},
 				RefColumns: []*schema.Column{ActivitiesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 			{
 				Symbol:     "template_tasks_templates_templateTasks",
 				Columns:    []*schema.Column{TemplateTasksColumns[4]},
 				RefColumns: []*schema.Column{TemplatesColumns[0]},
-				OnDelete:   schema.NoAction,
+				OnDelete:   schema.Cascade,
 			},
 		},
 	}

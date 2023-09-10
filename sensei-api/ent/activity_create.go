@@ -50,9 +50,25 @@ func (ac *ActivityCreate) SetDescription(s string) *ActivityCreate {
 	return ac
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableDescription(s *string) *ActivityCreate {
+	if s != nil {
+		ac.SetDescription(*s)
+	}
+	return ac
+}
+
 // SetIcon sets the "icon" field.
 func (ac *ActivityCreate) SetIcon(s string) *ActivityCreate {
 	ac.mutation.SetIcon(s)
+	return ac
+}
+
+// SetNillableIcon sets the "icon" field if the given value is not nil.
+func (ac *ActivityCreate) SetNillableIcon(s *string) *ActivityCreate {
+	if s != nil {
+		ac.SetIcon(*s)
+	}
 	return ac
 }
 
@@ -186,12 +202,6 @@ func (ac *ActivityCreate) check() error {
 		if err := activity.NameValidator(v); err != nil {
 			return &ValidationError{Name: "name", err: fmt.Errorf(`ent: validator failed for field "Activity.name": %w`, err)}
 		}
-	}
-	if _, ok := ac.mutation.Description(); !ok {
-		return &ValidationError{Name: "description", err: errors.New(`ent: missing required field "Activity.description"`)}
-	}
-	if _, ok := ac.mutation.Icon(); !ok {
-		return &ValidationError{Name: "icon", err: errors.New(`ent: missing required field "Activity.icon"`)}
 	}
 	if _, ok := ac.mutation.Size(); !ok {
 		return &ValidationError{Name: "size", err: errors.New(`ent: missing required field "Activity.size"`)}

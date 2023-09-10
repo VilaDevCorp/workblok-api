@@ -43,9 +43,37 @@ func (au *ActivityUpdate) SetDescription(s string) *ActivityUpdate {
 	return au
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableDescription(s *string) *ActivityUpdate {
+	if s != nil {
+		au.SetDescription(*s)
+	}
+	return au
+}
+
+// ClearDescription clears the value of the "description" field.
+func (au *ActivityUpdate) ClearDescription() *ActivityUpdate {
+	au.mutation.ClearDescription()
+	return au
+}
+
 // SetIcon sets the "icon" field.
 func (au *ActivityUpdate) SetIcon(s string) *ActivityUpdate {
 	au.mutation.SetIcon(s)
+	return au
+}
+
+// SetNillableIcon sets the "icon" field if the given value is not nil.
+func (au *ActivityUpdate) SetNillableIcon(s *string) *ActivityUpdate {
+	if s != nil {
+		au.SetIcon(*s)
+	}
+	return au
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (au *ActivityUpdate) ClearIcon() *ActivityUpdate {
+	au.mutation.ClearIcon()
 	return au
 }
 
@@ -222,8 +250,14 @@ func (au *ActivityUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := au.mutation.Description(); ok {
 		_spec.SetField(activity.FieldDescription, field.TypeString, value)
 	}
+	if au.mutation.DescriptionCleared() {
+		_spec.ClearField(activity.FieldDescription, field.TypeString)
+	}
 	if value, ok := au.mutation.Icon(); ok {
 		_spec.SetField(activity.FieldIcon, field.TypeString, value)
+	}
+	if au.mutation.IconCleared() {
+		_spec.ClearField(activity.FieldIcon, field.TypeString)
 	}
 	if value, ok := au.mutation.Size(); ok {
 		_spec.SetField(activity.FieldSize, field.TypeInt, value)
@@ -382,9 +416,37 @@ func (auo *ActivityUpdateOne) SetDescription(s string) *ActivityUpdateOne {
 	return auo
 }
 
+// SetNillableDescription sets the "description" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableDescription(s *string) *ActivityUpdateOne {
+	if s != nil {
+		auo.SetDescription(*s)
+	}
+	return auo
+}
+
+// ClearDescription clears the value of the "description" field.
+func (auo *ActivityUpdateOne) ClearDescription() *ActivityUpdateOne {
+	auo.mutation.ClearDescription()
+	return auo
+}
+
 // SetIcon sets the "icon" field.
 func (auo *ActivityUpdateOne) SetIcon(s string) *ActivityUpdateOne {
 	auo.mutation.SetIcon(s)
+	return auo
+}
+
+// SetNillableIcon sets the "icon" field if the given value is not nil.
+func (auo *ActivityUpdateOne) SetNillableIcon(s *string) *ActivityUpdateOne {
+	if s != nil {
+		auo.SetIcon(*s)
+	}
+	return auo
+}
+
+// ClearIcon clears the value of the "icon" field.
+func (auo *ActivityUpdateOne) ClearIcon() *ActivityUpdateOne {
+	auo.mutation.ClearIcon()
 	return auo
 }
 
@@ -591,8 +653,14 @@ func (auo *ActivityUpdateOne) sqlSave(ctx context.Context) (_node *Activity, err
 	if value, ok := auo.mutation.Description(); ok {
 		_spec.SetField(activity.FieldDescription, field.TypeString, value)
 	}
+	if auo.mutation.DescriptionCleared() {
+		_spec.ClearField(activity.FieldDescription, field.TypeString)
+	}
 	if value, ok := auo.mutation.Icon(); ok {
 		_spec.SetField(activity.FieldIcon, field.TypeString, value)
+	}
+	if auo.mutation.IconCleared() {
+		_spec.ClearField(activity.FieldIcon, field.TypeString)
 	}
 	if value, ok := auo.mutation.Size(); ok {
 		_spec.SetField(activity.FieldSize, field.TypeInt, value)
