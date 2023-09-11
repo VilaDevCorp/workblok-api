@@ -157,3 +157,22 @@ func Stats(c *gin.Context) {
 	res := utils.OkOperation(result)
 	c.JSON(res.Status, res.Result)
 }
+
+func CompletedWeekPercentage(c *gin.Context) {
+	var form task.CompletedWeekPercentageForm
+	err := c.ShouldBind(&form)
+	if err != nil {
+		res := utils.BadRequest(form, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	svc := svc.Get()
+	result, err := svc.Task.CompletedWeekPercentage(c.Request.Context(), form)
+	if err != nil {
+		res := utils.InternalError(err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	res := utils.OkOperation(result)
+	c.JSON(res.Status, res.Result)
+}

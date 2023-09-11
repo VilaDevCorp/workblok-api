@@ -40,3 +40,8 @@ type StatsForm struct {
 	Month  *int       `json:"month"`
 	Week   *int       `json:"week"`
 }
+
+type CompletedWeekPercentageForm struct {
+	UserId    *uuid.UUID  `json:"userId"`
+	StartDate *utils.Date `json:"startDate"  time_format:"2006-01-02"`
+}

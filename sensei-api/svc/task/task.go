@@ -25,6 +25,7 @@ type Svc interface {
 	Delete(ctx context.Context, taskIds []uuid.UUID) error
 	Complete(ctx context.Context, taskIds []uuid.UUID, isComplete bool) (int, error)
 	Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, error)
+	CompletedWeekPercentage(ctx context.Context, form CompletedWeekPercentageForm) (*float32, error)
 }
 
 type Store struct {
@@ -256,4 +257,37 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 		DailyAvgScheduled: dailyAvgScheduled, DailyAvgCompleted: dailyAvgCompleted, ActivityInfo: activityInfoLimited10}
 
 	return &result, nil
+}
+
+func (s *Store) CompletedWeekPercentage(ctx context.Context, form CompletedWeekPercentageForm) (*float32, error) {
+	var startDate time.Time
+	var finishDate time.Time
+	var conditions []predicate.Task
+	conditions = append(conditions, task.HasUserWith(user.IDEQ(*form.UserId)))
+	startDate = time.Time(*form.StartDate)
+	finishDate = startDate.AddDate(0, 0, 7)
+	conditions = append(conditions, task.DueDateGTE(startDate))
+	conditions = append(conditions, task.DueDateLT(finishDate))
+
+	// Get task of this period and their stats
+	tasks, err := s.DB.Task.Query().Where(task.And(conditions...)).WithActivity().WithUser().All(ctx)
+	if err != nil {
+		return nil, err
+	}
+	scheduledDans := 0
+	completedDans := 0
+	if len(tasks) > 0 {
+		for _, task := range tasks {
+			scheduledDans += task.Edges.Activity.Size
+			if task.Completed {
+				completedDans += task.Edges.Activity.Size
+			}
+		}
+	}
+	completedPercentage := float32(100)
+	if scheduledDans != 0 {
+		completedPercentage = float32(completedDans) / float32(scheduledDans) * 100
+	}
+
+	return &completedPercentage, nil
 }
