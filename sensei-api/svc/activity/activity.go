@@ -33,7 +33,7 @@ func (s *Store) Update(ctx context.Context, form UpdateForm) (*ent.Activity, err
 	if form.Name != nil {
 		update.SetName(*form.Name)
 	}
-	if form.Name != nil {
+	if form.Description != nil {
 		update.SetDescription(*form.Description)
 	}
 	if form.Icon != nil {
