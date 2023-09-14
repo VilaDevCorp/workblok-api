@@ -240,7 +240,7 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 			}
 		}
 	}
-	completedPercentage := float32(0)
+	completedPercentage := float32(100)
 	if scheduledDans != 0 {
 		completedPercentage = float32(completedDans) / float32(scheduledDans) * 100
 	}
