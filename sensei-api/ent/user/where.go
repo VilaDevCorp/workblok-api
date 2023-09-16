@@ -86,6 +86,11 @@ func MailValid(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldMailValid, v))
 }
 
+// TutorialCompleted applies equality check predicate on the "TutorialCompleted" field. It's identical to TutorialCompletedEQ.
+func TutorialCompleted(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldTutorialCompleted, v))
+}
+
 // CreationDateEQ applies the EQ predicate on the "creationDate" field.
 func CreationDateEQ(v time.Time) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldCreationDate, v))
@@ -369,6 +374,16 @@ func MailValidEQ(v bool) predicate.User {
 // MailValidNEQ applies the NEQ predicate on the "MailValid" field.
 func MailValidNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldMailValid, v))
+}
+
+// TutorialCompletedEQ applies the EQ predicate on the "TutorialCompleted" field.
+func TutorialCompletedEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldEQ(FieldTutorialCompleted, v))
+}
+
+// TutorialCompletedNEQ applies the NEQ predicate on the "TutorialCompleted" field.
+func TutorialCompletedNEQ(v bool) predicate.User {
+	return predicate.User(sql.FieldNEQ(FieldTutorialCompleted, v))
 }
 
 // HasActivities applies the HasEdge predicate on the "activities" edge.

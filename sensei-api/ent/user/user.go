@@ -27,6 +27,8 @@ const (
 	FieldDans = "dans"
 	// FieldMailValid holds the string denoting the mailvalid field in the database.
 	FieldMailValid = "mail_valid"
+	// FieldTutorialCompleted holds the string denoting the tutorialcompleted field in the database.
+	FieldTutorialCompleted = "tutorial_completed"
 	// EdgeActivities holds the string denoting the activities edge name in mutations.
 	EdgeActivities = "activities"
 	// EdgeTemplates holds the string denoting the templates edge name in mutations.
@@ -76,6 +78,7 @@ var Columns = []string{
 	FieldPassword,
 	FieldDans,
 	FieldMailValid,
+	FieldTutorialCompleted,
 }
 
 // ValidColumn reports if the column name is valid (part of the table columns).
@@ -101,6 +104,8 @@ var (
 	DefaultDans int
 	// DefaultMailValid holds the default value on creation for the "MailValid" field.
 	DefaultMailValid bool
+	// DefaultTutorialCompleted holds the default value on creation for the "TutorialCompleted" field.
+	DefaultTutorialCompleted bool
 	// DefaultID holds the default value on creation for the "id" field.
 	DefaultID func() uuid.UUID
 )
@@ -141,6 +146,11 @@ func ByDans(opts ...sql.OrderTermOption) OrderOption {
 // ByMailValid orders the results by the MailValid field.
 func ByMailValid(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldMailValid, opts...).ToFunc()
+}
+
+// ByTutorialCompleted orders the results by the TutorialCompleted field.
+func ByTutorialCompleted(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTutorialCompleted, opts...).ToFunc()
 }
 
 // ByActivitiesCount orders the results by activities count.

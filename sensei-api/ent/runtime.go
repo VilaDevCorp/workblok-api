@@ -112,6 +112,10 @@ func init() {
 	userDescMailValid := userFields[4].Descriptor()
 	// user.DefaultMailValid holds the default value on creation for the MailValid field.
 	user.DefaultMailValid = userDescMailValid.Default.(bool)
+	// userDescTutorialCompleted is the schema descriptor for TutorialCompleted field.
+	userDescTutorialCompleted := userFields[5].Descriptor()
+	// user.DefaultTutorialCompleted holds the default value on creation for the TutorialCompleted field.
+	user.DefaultTutorialCompleted = userDescTutorialCompleted.Default.(bool)
 	// userDescID is the schema descriptor for id field.
 	userDescID := userMixinFields0[0].Descriptor()
 	// user.DefaultID holds the default value on creation for the id field.

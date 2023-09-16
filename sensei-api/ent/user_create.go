@@ -85,6 +85,20 @@ func (uc *UserCreate) SetNillableMailValid(b *bool) *UserCreate {
 	return uc
 }
 
+// SetTutorialCompleted sets the "TutorialCompleted" field.
+func (uc *UserCreate) SetTutorialCompleted(b bool) *UserCreate {
+	uc.mutation.SetTutorialCompleted(b)
+	return uc
+}
+
+// SetNillableTutorialCompleted sets the "TutorialCompleted" field if the given value is not nil.
+func (uc *UserCreate) SetNillableTutorialCompleted(b *bool) *UserCreate {
+	if b != nil {
+		uc.SetTutorialCompleted(*b)
+	}
+	return uc
+}
+
 // SetID sets the "id" field.
 func (uc *UserCreate) SetID(u uuid.UUID) *UserCreate {
 	uc.mutation.SetID(u)
@@ -206,6 +220,10 @@ func (uc *UserCreate) defaults() {
 		v := user.DefaultMailValid
 		uc.mutation.SetMailValid(v)
 	}
+	if _, ok := uc.mutation.TutorialCompleted(); !ok {
+		v := user.DefaultTutorialCompleted
+		uc.mutation.SetTutorialCompleted(v)
+	}
 	if _, ok := uc.mutation.ID(); !ok {
 		v := user.DefaultID()
 		uc.mutation.SetID(v)
@@ -246,6 +264,9 @@ func (uc *UserCreate) check() error {
 	}
 	if _, ok := uc.mutation.MailValid(); !ok {
 		return &ValidationError{Name: "MailValid", err: errors.New(`ent: missing required field "User.MailValid"`)}
+	}
+	if _, ok := uc.mutation.TutorialCompleted(); !ok {
+		return &ValidationError{Name: "TutorialCompleted", err: errors.New(`ent: missing required field "User.TutorialCompleted"`)}
 	}
 	return nil
 }
@@ -305,6 +326,10 @@ func (uc *UserCreate) createSpec() (*User, *sqlgraph.CreateSpec) {
 	if value, ok := uc.mutation.MailValid(); ok {
 		_spec.SetField(user.FieldMailValid, field.TypeBool, value)
 		_node.MailValid = value
+	}
+	if value, ok := uc.mutation.TutorialCompleted(); ok {
+		_spec.SetField(user.FieldTutorialCompleted, field.TypeBool, value)
+		_node.TutorialCompleted = value
 	}
 	if nodes := uc.mutation.ActivitiesIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

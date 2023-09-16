@@ -25,6 +25,7 @@ func (User) Fields() []ent.Field {
 		field.String("Password").NotEmpty().StructTag(`json:"-"`),
 		field.Int("Dans").Default(0).StructTag(`json:"dans"`),
 		field.Bool("MailValid").StorageKey("mail_valid").Default(false).StructTag(`json:"mailValid"`),
+		field.Bool("TutorialCompleted").StorageKey("tutorial_completed").Default(false).StructTag(`json:"tutorialCompleted"`),
 	}
 }
 

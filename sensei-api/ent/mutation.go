@@ -2553,32 +2553,33 @@ func (m *TemplateTaskMutation) ResetEdge(name string) error {
 // UserMutation represents an operation that mutates the User nodes in the graph.
 type UserMutation struct {
 	config
-	op                Op
-	typ               string
-	id                *uuid.UUID
-	creationDate      *time.Time
-	_Username         *string
-	_Mail             *string
-	_Password         *string
-	_Dans             *int
-	add_Dans          *int
-	_MailValid        *bool
-	clearedFields     map[string]struct{}
-	activities        map[uuid.UUID]struct{}
-	removedactivities map[uuid.UUID]struct{}
-	clearedactivities bool
-	templates         map[uuid.UUID]struct{}
-	removedtemplates  map[uuid.UUID]struct{}
-	clearedtemplates  bool
-	codes             map[uuid.UUID]struct{}
-	removedcodes      map[uuid.UUID]struct{}
-	clearedcodes      bool
-	tasks             map[uuid.UUID]struct{}
-	removedtasks      map[uuid.UUID]struct{}
-	clearedtasks      bool
-	done              bool
-	oldValue          func(context.Context) (*User, error)
-	predicates        []predicate.User
+	op                 Op
+	typ                string
+	id                 *uuid.UUID
+	creationDate       *time.Time
+	_Username          *string
+	_Mail              *string
+	_Password          *string
+	_Dans              *int
+	add_Dans           *int
+	_MailValid         *bool
+	_TutorialCompleted *bool
+	clearedFields      map[string]struct{}
+	activities         map[uuid.UUID]struct{}
+	removedactivities  map[uuid.UUID]struct{}
+	clearedactivities  bool
+	templates          map[uuid.UUID]struct{}
+	removedtemplates   map[uuid.UUID]struct{}
+	clearedtemplates   bool
+	codes              map[uuid.UUID]struct{}
+	removedcodes       map[uuid.UUID]struct{}
+	clearedcodes       bool
+	tasks              map[uuid.UUID]struct{}
+	removedtasks       map[uuid.UUID]struct{}
+	clearedtasks       bool
+	done               bool
+	oldValue           func(context.Context) (*User, error)
+	predicates         []predicate.User
 }
 
 var _ ent.Mutation = (*UserMutation)(nil)
@@ -2921,6 +2922,42 @@ func (m *UserMutation) ResetMailValid() {
 	m._MailValid = nil
 }
 
+// SetTutorialCompleted sets the "TutorialCompleted" field.
+func (m *UserMutation) SetTutorialCompleted(b bool) {
+	m._TutorialCompleted = &b
+}
+
+// TutorialCompleted returns the value of the "TutorialCompleted" field in the mutation.
+func (m *UserMutation) TutorialCompleted() (r bool, exists bool) {
+	v := m._TutorialCompleted
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTutorialCompleted returns the old "TutorialCompleted" field's value of the User entity.
+// If the User object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *UserMutation) OldTutorialCompleted(ctx context.Context) (v bool, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTutorialCompleted is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTutorialCompleted requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTutorialCompleted: %w", err)
+	}
+	return oldValue.TutorialCompleted, nil
+}
+
+// ResetTutorialCompleted resets all changes to the "TutorialCompleted" field.
+func (m *UserMutation) ResetTutorialCompleted() {
+	m._TutorialCompleted = nil
+}
+
 // AddActivityIDs adds the "activities" edge to the Activity entity by ids.
 func (m *UserMutation) AddActivityIDs(ids ...uuid.UUID) {
 	if m.activities == nil {
@@ -3171,7 +3208,7 @@ func (m *UserMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *UserMutation) Fields() []string {
-	fields := make([]string, 0, 6)
+	fields := make([]string, 0, 7)
 	if m.creationDate != nil {
 		fields = append(fields, user.FieldCreationDate)
 	}
@@ -3189,6 +3226,9 @@ func (m *UserMutation) Fields() []string {
 	}
 	if m._MailValid != nil {
 		fields = append(fields, user.FieldMailValid)
+	}
+	if m._TutorialCompleted != nil {
+		fields = append(fields, user.FieldTutorialCompleted)
 	}
 	return fields
 }
@@ -3210,6 +3250,8 @@ func (m *UserMutation) Field(name string) (ent.Value, bool) {
 		return m.Dans()
 	case user.FieldMailValid:
 		return m.MailValid()
+	case user.FieldTutorialCompleted:
+		return m.TutorialCompleted()
 	}
 	return nil, false
 }
@@ -3231,6 +3273,8 @@ func (m *UserMutation) OldField(ctx context.Context, name string) (ent.Value, er
 		return m.OldDans(ctx)
 	case user.FieldMailValid:
 		return m.OldMailValid(ctx)
+	case user.FieldTutorialCompleted:
+		return m.OldTutorialCompleted(ctx)
 	}
 	return nil, fmt.Errorf("unknown User field %s", name)
 }
@@ -3281,6 +3325,13 @@ func (m *UserMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetMailValid(v)
+		return nil
+	case user.FieldTutorialCompleted:
+		v, ok := value.(bool)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTutorialCompleted(v)
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)
@@ -3363,6 +3414,9 @@ func (m *UserMutation) ResetField(name string) error {
 		return nil
 	case user.FieldMailValid:
 		m.ResetMailValid()
+		return nil
+	case user.FieldTutorialCompleted:
+		m.ResetTutorialCompleted()
 		return nil
 	}
 	return fmt.Errorf("unknown User field %s", name)

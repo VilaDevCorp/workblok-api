@@ -30,6 +30,8 @@ type User struct {
 	Dans int `json:"dans"`
 	// MailValid holds the value of the "MailValid" field.
 	MailValid bool `json:"mailValid"`
+	// TutorialCompleted holds the value of the "TutorialCompleted" field.
+	TutorialCompleted bool `json:"tutorialCompleted"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the UserQuery when eager-loading is set.
 	Edges        UserEdges `json:"edges"`
@@ -92,7 +94,7 @@ func (*User) scanValues(columns []string) ([]any, error) {
 	values := make([]any, len(columns))
 	for i := range columns {
 		switch columns[i] {
-		case user.FieldMailValid:
+		case user.FieldMailValid, user.FieldTutorialCompleted:
 			values[i] = new(sql.NullBool)
 		case user.FieldDans:
 			values[i] = new(sql.NullInt64)
@@ -158,6 +160,12 @@ func (u *User) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field MailValid", values[i])
 			} else if value.Valid {
 				u.MailValid = value.Bool
+			}
+		case user.FieldTutorialCompleted:
+			if value, ok := values[i].(*sql.NullBool); !ok {
+				return fmt.Errorf("unexpected type %T for field TutorialCompleted", values[i])
+			} else if value.Valid {
+				u.TutorialCompleted = value.Bool
 			}
 		default:
 			u.selectValues.Set(columns[i], values[i])
@@ -232,6 +240,9 @@ func (u *User) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("MailValid=")
 	builder.WriteString(fmt.Sprintf("%v", u.MailValid))
+	builder.WriteString(", ")
+	builder.WriteString("TutorialCompleted=")
+	builder.WriteString(fmt.Sprintf("%v", u.TutorialCompleted))
 	builder.WriteByte(')')
 	return builder.String()
 }

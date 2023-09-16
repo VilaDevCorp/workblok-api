@@ -120,6 +120,7 @@ var (
 		{Name: "password", Type: field.TypeString},
 		{Name: "dans", Type: field.TypeInt, Default: 0},
 		{Name: "mail_valid", Type: field.TypeBool, Default: false},
+		{Name: "tutorial_completed", Type: field.TypeBool, Default: false},
 	}
 	// UsersTable holds the schema information for the "users" table.
 	UsersTable = &schema.Table{

@@ -13,7 +13,7 @@ import (
 
 type Svc interface {
 	Create(ctx context.Context, form CreateForm) (*ent.User, error)
-	Update(ctx context.Context, form UpdateForm) (*ent.User, error)
+	CompleteTutorial(ctx context.Context, userId uuid.UUID) error
 	Search(ctx context.Context, form SearchForm) (*utils.Page, error)
 	Get(ctx context.Context, userId uuid.UUID) (*ent.User, error)
 	Delete(ctx context.Context, userId uuid.UUID) error
@@ -27,12 +27,11 @@ func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.User, error) 
 	return s.DB.User.Create().SetUsername(form.UserName).SetPassword(form.Password).SetMail(form.Mail).Save(ctx)
 }
 
-func (s *Store) Update(ctx context.Context, form UpdateForm) (*ent.User, error) {
-	update := s.DB.User.UpdateOneID(form.Id)
-	if form.Password != nil {
-		update.SetPassword(*form.Password)
-	}
-	return update.Save(ctx)
+func (s *Store) CompleteTutorial(ctx context.Context, userId uuid.UUID) error {
+	update := s.DB.User.UpdateOneID(userId)
+	update.SetTutorialCompleted(true)
+	_, error := update.Save(ctx)
+	return error
 }
 
 func (s *Store) Get(ctx context.Context, userId uuid.UUID) (*ent.User, error) {

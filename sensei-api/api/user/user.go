@@ -28,22 +28,22 @@ func Create(c *gin.Context) {
 	c.JSON(res.Status, res.Result)
 }
 
-func Update(c *gin.Context) {
-	var form user.UpdateForm
-	err := c.ShouldBind(&form)
+func CompleteTutorial(c *gin.Context) {
+	unparsedId, _ := c.Params.Get("id")
+	parsedId, err := uuid.Parse(unparsedId)
 	if err != nil {
-		res := utils.BadRequest(form, err)
+		res := utils.BadRequest(unparsedId, err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
 	svc := svc.Get()
-	result, err := svc.User.Update(c.Request.Context(), form)
+	err = svc.User.CompleteTutorial(c.Request.Context(), parsedId)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
-	res := utils.OkUpdated(result)
+	res := utils.OkOperation(nil)
 	c.JSON(res.Status, res.Result)
 }
 

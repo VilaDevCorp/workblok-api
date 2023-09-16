@@ -85,6 +85,20 @@ func (uu *UserUpdate) SetNillableMailValid(b *bool) *UserUpdate {
 	return uu
 }
 
+// SetTutorialCompleted sets the "TutorialCompleted" field.
+func (uu *UserUpdate) SetTutorialCompleted(b bool) *UserUpdate {
+	uu.mutation.SetTutorialCompleted(b)
+	return uu
+}
+
+// SetNillableTutorialCompleted sets the "TutorialCompleted" field if the given value is not nil.
+func (uu *UserUpdate) SetNillableTutorialCompleted(b *bool) *UserUpdate {
+	if b != nil {
+		uu.SetTutorialCompleted(*b)
+	}
+	return uu
+}
+
 // AddActivityIDs adds the "activities" edge to the Activity entity by IDs.
 func (uu *UserUpdate) AddActivityIDs(ids ...uuid.UUID) *UserUpdate {
 	uu.mutation.AddActivityIDs(ids...)
@@ -310,6 +324,9 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := uu.mutation.MailValid(); ok {
 		_spec.SetField(user.FieldMailValid, field.TypeBool, value)
+	}
+	if value, ok := uu.mutation.TutorialCompleted(); ok {
+		_spec.SetField(user.FieldTutorialCompleted, field.TypeBool, value)
 	}
 	if uu.mutation.ActivitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -560,6 +577,20 @@ func (uuo *UserUpdateOne) SetMailValid(b bool) *UserUpdateOne {
 func (uuo *UserUpdateOne) SetNillableMailValid(b *bool) *UserUpdateOne {
 	if b != nil {
 		uuo.SetMailValid(*b)
+	}
+	return uuo
+}
+
+// SetTutorialCompleted sets the "TutorialCompleted" field.
+func (uuo *UserUpdateOne) SetTutorialCompleted(b bool) *UserUpdateOne {
+	uuo.mutation.SetTutorialCompleted(b)
+	return uuo
+}
+
+// SetNillableTutorialCompleted sets the "TutorialCompleted" field if the given value is not nil.
+func (uuo *UserUpdateOne) SetNillableTutorialCompleted(b *bool) *UserUpdateOne {
+	if b != nil {
+		uuo.SetTutorialCompleted(*b)
 	}
 	return uuo
 }
@@ -819,6 +850,9 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.MailValid(); ok {
 		_spec.SetField(user.FieldMailValid, field.TypeBool, value)
+	}
+	if value, ok := uuo.mutation.TutorialCompleted(); ok {
+		_spec.SetField(user.FieldTutorialCompleted, field.TypeBool, value)
 	}
 	if uuo.mutation.ActivitiesCleared() {
 		edge := &sqlgraph.EdgeSpec{
