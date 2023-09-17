@@ -78,7 +78,7 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 		limit = form.PageSize
 	}
 	if form.Name != nil {
-		conditions = append(conditions, template.NameContains(*form.Name))
+		conditions = append(conditions, template.NameContainsFold(*form.Name))
 	}
 	if form.UserId != nil {
 		conditions = append(conditions, template.HasUserWith(user.IDEQ(*form.UserId)))

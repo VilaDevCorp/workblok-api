@@ -63,7 +63,7 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	}
 
 	if form.Name != nil {
-		conditions = append(conditions, activity.NameContains(*form.Name))
+		conditions = append(conditions, activity.NameContainsFold(*form.Name))
 	}
 	if form.Size != nil {
 		conditions = append(conditions, activity.SizeEQ(*form.Size))
