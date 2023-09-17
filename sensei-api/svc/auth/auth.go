@@ -108,7 +108,7 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 	_, err = s.DB.VerificationCode.Create().SetUserID(user.ID).SetExpireDate(expireDate).SetType(utils.VALIDATION_TYPE).SetCode(codeStr).SetValid(true).Save(ctx)
 	fmt.Println(err)
 	if err == nil {
-		err = mail.SendMail("davidvilas@gmail.com", fmt.Sprintf("To validate the account you can use the code %s", codeStr))
+		err = mail.SendMail(form.Mail, "Validation code", fmt.Sprintf("You can use the code %s to validate your account", codeStr))
 	}
 	res := utils.OkCreated(user)
 	return res

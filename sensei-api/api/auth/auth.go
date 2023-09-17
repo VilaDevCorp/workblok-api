@@ -61,10 +61,10 @@ func CreateVerificationCode(c *gin.Context) {
 	svc := svc.Get()
 	verificationCode, err := svc.VerificationCode.Create(c.Request.Context(), form)
 	if verificationCode.Type == utils.VALIDATION_TYPE {
-		err = mail.SendMail("davidvilas@gmail.com", fmt.Sprintf("To validate the account you can use the code %s",
+		err = mail.SendMail(form.Mail, "Validation code", fmt.Sprintf("You can use the code %s to validate the account",
 			verificationCode.Code))
 	} else if verificationCode.Type == utils.RECOVER_TYPE {
-		err = mail.SendMail("davidvilas@gmail.com", fmt.Sprintf("You can use the code %s for changing your password",
+		err = mail.SendMail(form.Mail, "Password change code", fmt.Sprintf("You can use the code %s to change your password",
 			verificationCode.Code))
 	}
 
