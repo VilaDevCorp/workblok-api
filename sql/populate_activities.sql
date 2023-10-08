@@ -1,1 +1,0 @@
-insert into activity (name, user_id) values('Entrenamiento de fuerza', (select id from user where username='davidvilas')),('Entrenamiento de boxeo', (select id from user where username='davidvilas')) ;
