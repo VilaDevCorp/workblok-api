@@ -62,8 +62,8 @@ func Unauthorized(cause string, errCode string) HttpResponse {
 	return HttpResponse{Status: http.StatusUnauthorized, Result: ResponseResult{Message: fmt.Sprintf("Unauthorized user: %s", cause), ErrCode: errCode}}
 }
 
-func TaskAlreadyCompleted() HttpResponse {
-	return HttpResponse{Status: http.StatusConflict, Result: ResponseResult{Message: "Some tasks has already been completed/uncompleted"}}
+func BlockNotFinishedExists() HttpResponse {
+	return HttpResponse{Status: http.StatusConflict, Result: ResponseResult{Message: "The user has an unfinished block"}}
 }
 
 func VerificationCodeNotMatch() HttpResponse {

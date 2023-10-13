@@ -1,10 +1,10 @@
 package main
 
 import (
-	"appname/api"
-	"appname/conf"
-	"appname/db"
-	"appname/svc"
+	"workblok/api"
+	"workblok/conf"
+	"workblok/db"
+	"workblok/svc"
 
 	"github.com/rs/zerolog/log"
 )

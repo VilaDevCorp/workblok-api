@@ -4,7 +4,7 @@ import "github.com/google/uuid"
 
 type CreateForm struct {
 	UserName string `json:"userName" binding:"required"`
-	Mail     string `json:"mail" binding:"required"`
+	Email    string `json:"email" binding:"required"`
 	Password string `json:"password" binding:"required"`
 }
 

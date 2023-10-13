@@ -11,6 +11,16 @@ type User struct {
 	ent.Schema
 }
 
+const (
+	Minutes = "minutes"
+	Hours   = "hours"
+)
+
+type Config struct {
+	MaxTimePerBlock int    `json:"maxTimePerBlock"`
+	DisplayTimeMode string `json:"displayTimeMode"`
+}
+
 func (User) Mixin() []ent.Mixin {
 	return []ent.Mixin{
 		CommonMixin{},
@@ -21,9 +31,10 @@ func (User) Mixin() []ent.Mixin {
 func (User) Fields() []ent.Field {
 	return []ent.Field{
 		field.String("Username").Unique().NotEmpty().StructTag(`json:"username"`),
-		field.String("Mail").Unique().NotEmpty().StructTag(`json:"mail"`),
+		field.String("Email").Unique().NotEmpty().StructTag(`json:"email"`),
 		field.String("Password").NotEmpty().StructTag(`json:"-"`),
-		field.Bool("MailValid").StorageKey("mail_valid").Default(false).StructTag(`json:"mailValid"`),
+		field.Bool("EmailValid").StorageKey("email_valid").Default(false).StructTag(`json:"emailValid"`),
+		field.JSON("Config", &Config{}).Optional().StructTag(`json:"config"`),
 		field.Bool("TutorialCompleted").StorageKey("tutorial_completed").Default(false).StructTag(`json:"tutorialCompleted"`),
 	}
 }
@@ -31,7 +42,7 @@ func (User) Fields() []ent.Field {
 // Edges of the User.
 func (User) Edges() []ent.Edge {
 	return []ent.Edge{
-		edge.To("activities", Activity.Type),
+		edge.To("blocks", Block.Type),
 		edge.To("codes", VerificationCode.Type),
 	}
 }

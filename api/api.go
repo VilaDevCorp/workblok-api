@@ -1,15 +1,13 @@
 package api
 
 import (
-	"appname/api/activity"
-	"appname/api/auth"
-	"appname/api/task"
-	"appname/api/template"
-	"appname/api/user"
-	"appname/conf"
-	"appname/middleware"
 	"fmt"
 	"net/http"
+	"workblok/api/auth"
+	"workblok/api/block"
+	"workblok/api/user"
+	"workblok/conf"
+	"workblok/middleware"
 
 	ginzerolog "github.com/dn365/gin-zerolog"
 	"github.com/gin-gonic/gin"
@@ -37,33 +35,19 @@ func GetRouter() *gin.Engine {
 	priv := api.Group("/api/private")
 	priv.Use(middleware.Authentication())
 	pub.GET("/health", health)
-	priv.POST("/activity", activity.Create)
-	priv.PUT("/activity", activity.Update)
-	priv.GET("/activity/:id", activity.Get)
-	priv.POST("/activity/search", activity.Search)
+	priv.POST("/block", block.Create)
+	priv.POST("/block/penalty", block.ApplyPenalty)
+	priv.POST("/block/:id/finish", block.Finish)
+	priv.GET("/block/:id", block.Get)
+	priv.GET("/block/active", block.GetActive)
+	priv.POST("/block/search", block.Search)
 	priv.GET("/self", auth.Self)
-	priv.DELETE("/activity", activity.Delete)
-	priv.POST("/task", task.Create)
-	priv.PUT("/task", task.Update)
-	priv.GET("/task/:id", task.Get)
-	priv.POST("/task/search", task.Search)
-	priv.POST("/task/complete", task.Complete)
-	priv.DELETE("/task", task.Delete)
-	priv.POST("/task/stats", task.Stats)
-	priv.POST("/task/completedWeekPercentage", task.CompletedWeekPercentage)
+	priv.DELETE("/block", block.Delete)
 	priv.POST("/user", user.Create)
 	priv.POST("/user/:id/completeTutorial", user.CompleteTutorial)
 	priv.GET("/user/:id", user.Get)
 	priv.POST("/user/search", user.Search)
 	priv.DELETE("/user/:id", user.Delete)
-	priv.POST("/template", template.Create)
-	priv.PUT("/template", template.Update)
-	priv.GET("/template/:id", template.Get)
-	priv.POST("/template/search", template.Search)
-	priv.DELETE("/template", template.Delete)
-	priv.POST("/template/:id/tasks", template.CreateTask)
-	priv.DELETE("/template/tasks", template.DeleteTasks)
-	priv.POST("/template/:id/apply", template.ApplyTemplate)
 	return api
 }
 

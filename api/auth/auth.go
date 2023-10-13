@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"appname/conf"
-	"appname/mail"
-	"appname/svc"
-	"appname/svc/auth"
-	"appname/svc/verificationCode"
-	"appname/utils"
 	"fmt"
 	"net/http"
+	"workblok/conf"
+	"workblok/mail"
+	"workblok/svc"
+	"workblok/svc/auth"
+	"workblok/svc/verificationCode"
+	"workblok/utils"
 
 	"github.com/gin-gonic/gin"
 )
@@ -61,10 +61,10 @@ func CreateVerificationCode(c *gin.Context) {
 	svc := svc.Get()
 	verificationCode, err := svc.VerificationCode.Create(c.Request.Context(), form)
 	if verificationCode.Type == utils.VALIDATION_TYPE {
-		err = mail.SendMail(form.Mail, "Validation code", fmt.Sprintf("You can use the code %s to validate the account",
+		err = mail.SendMail(form.Email, "Validation code", fmt.Sprintf("You can use the code %s to validate the account",
 			verificationCode.Code))
 	} else if verificationCode.Type == utils.RECOVER_TYPE {
-		err = mail.SendMail(form.Mail, "Password change code", fmt.Sprintf("You can use the code %s to change your password",
+		err = mail.SendMail(form.Email, "Password change code", fmt.Sprintf("You can use the code %s to change your password",
 			verificationCode.Code))
 	}
 

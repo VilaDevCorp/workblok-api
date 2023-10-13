@@ -1,4 +1,4 @@
-module appname
+module workblok
 
 go 1.20
 

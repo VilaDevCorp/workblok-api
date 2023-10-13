@@ -1,8 +1,8 @@
 package mail
 
 import (
-	"appname/conf"
 	"net/smtp"
+	"workblok/conf"
 )
 
 func SendMail(to string, subject string, message string) error {

@@ -5,15 +5,15 @@ Dev:
   HttpOnly: false
   CorsHost: http://192.168.0.111:3000
 Prod:
-  CookieHost: trainwithappname.com
+  CookieHost: workblok.com
   CookieSecure: true
   HttpOnly: true
-  CorsHost: https://trainwithappname.com:3000
+  CorsHost: https://workblok.com:3000
 IP: 0.0.0.0
 Port: 8080
-JwtKey: appName258SECRETkey
+JwtKey: workblok258SECRETkey
 Mail:
-  User: appnametrainingapp@gmail.com
+  User: workblok@gmail.com
   Pass: emaddwcfyqjexjum
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
@@ -22,4 +22,4 @@ DB:
   Host: db
   User: root
   Pass: 1234
-  DB: appname
+  DB: workblok

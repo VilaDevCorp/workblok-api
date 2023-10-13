@@ -1,11 +1,11 @@
 package db
 
 import (
-	"appname/conf"
-	"appname/ent"
-	"appname/ent/migrate"
 	"context"
 	"fmt"
+	"workblok/conf"
+	"workblok/ent"
+	"workblok/ent/migrate"
 
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/rs/zerolog/log"

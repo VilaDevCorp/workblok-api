@@ -1,15 +1,15 @@
 package verificationCode
 
 import (
-	"appname/ent"
-	"appname/ent/predicate"
-	"appname/ent/user"
-	"appname/ent/verificationcode"
-	"appname/utils"
 	"context"
 	"fmt"
 	"math/rand"
 	"time"
+	"workblok/ent"
+	"workblok/ent/predicate"
+	"workblok/ent/user"
+	"workblok/ent/verificationcode"
+	"workblok/utils"
 
 	"github.com/google/uuid"
 	"golang.org/x/crypto/bcrypt"
@@ -31,7 +31,7 @@ func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.VerificationC
 	fmt.Println(expireDate)
 	code := rand.Intn((1000000))
 	codeStr := fmt.Sprintf("%06d", code)
-	userId, err := s.DB.User.Query().Where(user.MailEQ(form.Mail)).FirstID(ctx)
+	userId, err := s.DB.User.Query().Where(user.EmailEQ(form.Email)).FirstID(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -64,13 +64,13 @@ func (s *Store) UseCode(ctx context.Context, form UseForm) utils.HttpResponse {
 	query := clientTx.VerificationCode.Query()
 	var conditions []predicate.VerificationCode
 	var userCondition []predicate.User
-	userCondition = append(userCondition, user.Mail(form.Mail))
+	userCondition = append(userCondition, user.Email(form.Email))
 	conditions = append(conditions, verificationcode.Valid(true))
 	conditions = append(conditions, verificationcode.HasUserWith(userCondition...))
 	conditions = append(conditions, verificationcode.TypeEQ(form.Type))
 	verificationCode, err := query.Where(verificationcode.And(conditions...)).First(ctx)
 	if err != nil {
-		return utils.NotFoundEntity(form.Mail)
+		return utils.NotFoundEntity(form.Email)
 	}
 	if verificationCode.ExpireDate.Before(time.Now()) {
 		return utils.ExpiredCode()
@@ -82,11 +82,11 @@ func (s *Store) UseCode(ctx context.Context, form UseForm) utils.HttpResponse {
 		if err != nil {
 			return utils.InternalError(err)
 		}
-		userId, err := clientTx.User.Query().Where(user.MailEQ(form.Mail)).FirstID(ctx)
+		userId, err := clientTx.User.Query().Where(user.EmailEQ(form.Email)).FirstID(ctx)
 		if err != nil {
 			return utils.InternalError(err)
 		}
-		_, err = clientTx.User.UpdateOneID(userId).SetMailValid(true).Save(ctx)
+		_, err = clientTx.User.UpdateOneID(userId).SetEmailValid(true).Save(ctx)
 		if err != nil {
 			return utils.InternalError(err)
 		}
@@ -101,7 +101,7 @@ func (s *Store) UseCode(ctx context.Context, form UseForm) utils.HttpResponse {
 		if err != nil {
 			return utils.InternalError(err)
 		}
-		userId, err := clientTx.User.Query().Where(user.MailEQ(form.Mail)).FirstID(ctx)
+		userId, err := clientTx.User.Query().Where(user.EmailEQ(form.Email)).FirstID(ctx)
 		if err != nil {
 			return utils.InternalError(err)
 		}

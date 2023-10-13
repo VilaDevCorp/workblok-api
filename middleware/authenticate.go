@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"appname/utils"
 	"fmt"
+	"workblok/utils"
 
 	"github.com/gin-gonic/gin"
 )

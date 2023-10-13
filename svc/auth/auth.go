@@ -1,14 +1,14 @@
 package auth
 
 import (
-	"appname/ent"
-	"appname/ent/user"
-	"appname/mail"
-	"appname/utils"
 	"context"
 	"fmt"
 	"math/rand"
 	"time"
+	"workblok/ent"
+	"workblok/ent/user"
+	"workblok/mail"
+	"workblok/utils"
 
 	"golang.org/x/crypto/bcrypt"
 )
@@ -36,13 +36,13 @@ func checkPassword(hashPassword, password string) bool {
 }
 
 func (s *Store) Login(ctx context.Context, form LoginForm) (utils.HttpResponse, *string) {
-	if form.Mail == "" || form.Password == "" {
+	if form.Email == "" || form.Password == "" {
 		res := utils.BadRequest(form, nil)
 		return res, nil
 	}
-	loginUser, err := s.DB.User.Query().Where(user.MailEQ(form.Mail)).Only(ctx)
+	loginUser, err := s.DB.User.Query().Where(user.EmailEQ(form.Email)).Only(ctx)
 	if err != nil {
-		res := utils.NotFoundEntity(form.Mail)
+		res := utils.NotFoundEntity(form.Email)
 		return res, nil
 	}
 
@@ -51,8 +51,8 @@ func (s *Store) Login(ctx context.Context, form LoginForm) (utils.HttpResponse, 
 		return res, nil
 
 	}
-	if loginUser.MailValid == false {
-		res := utils.Unauthorized("Mail not verified", "002")
+	if loginUser.EmailValid == false {
+		res := utils.Unauthorized("Email not verified", "002")
 		return res, nil
 	}
 	csrfToken, err := utils.GenerateRandomToken(64)
@@ -67,7 +67,7 @@ func (s *Store) Login(ctx context.Context, form LoginForm) (utils.HttpResponse, 
 		return res, nil
 	}
 
-	tokenString, err := utils.GenerateJWT(loginUser.ID.String(), loginUser.Mail, loginUser.Username, csrfToken)
+	tokenString, err := utils.GenerateJWT(loginUser.ID.String(), loginUser.Email, loginUser.Username, csrfToken)
 	if err != nil {
 		res := utils.InternalError(err)
 		return res, nil
@@ -78,7 +78,7 @@ func (s *Store) Login(ctx context.Context, form LoginForm) (utils.HttpResponse, 
 }
 
 func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse {
-	if form.UserName == "" || form.Mail == "" || form.Password == "" {
+	if form.UserName == "" || form.Email == "" || form.Password == "" {
 		res := utils.BadRequest(form, nil)
 		return res
 	}
@@ -89,14 +89,14 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 		res := utils.DuplicatedKey("user")
 		return res
 	}
-	alreadyExistMail, err := s.DB.User.Query().Where(user.MailEQ(form.Mail)).First(ctx)
-	if alreadyExistMail != nil {
+	alreadyExistEmail, err := s.DB.User.Query().Where(user.EmailEQ(form.Email)).First(ctx)
+	if alreadyExistEmail != nil {
 		res := utils.DuplicatedKey("mail")
 		return res
 
 	}
 
-	user, err := s.DB.User.Create().SetUsername(form.UserName).SetPassword(string(bytesPass[:])).SetMail(form.Mail).Save(ctx)
+	user, err := s.DB.User.Create().SetUsername(form.UserName).SetPassword(string(bytesPass[:])).SetEmail(form.Email).Save(ctx)
 	if err != nil {
 		res := utils.InternalError(err)
 		return res
@@ -108,7 +108,7 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 	_, err = s.DB.VerificationCode.Create().SetUserID(user.ID).SetExpireDate(expireDate).SetType(utils.VALIDATION_TYPE).SetCode(codeStr).SetValid(true).Save(ctx)
 	fmt.Println(err)
 	if err == nil {
-		err = mail.SendMail(form.Mail, "Validation code", fmt.Sprintf("You can use the code %s to validate your account", codeStr))
+		err = mail.SendMail(form.Email, "Validation code", fmt.Sprintf("You can use the code %s to validate your account", codeStr))
 	}
 	res := utils.OkCreated(user)
 	return res

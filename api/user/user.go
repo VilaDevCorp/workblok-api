@@ -1,9 +1,9 @@
 package user
 
 import (
-	"appname/svc"
-	"appname/svc/user"
-	"appname/utils"
+	"workblok/svc"
+	"workblok/svc/user"
+	"workblok/utils"
 
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"

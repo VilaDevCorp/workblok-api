@@ -1,12 +1,12 @@
 package user
 
 import (
-	"appname/ent"
-	"appname/ent/predicate"
-	"appname/ent/user"
-	"appname/utils"
 	"context"
 	"math"
+	"workblok/ent"
+	"workblok/ent/predicate"
+	"workblok/ent/user"
+	"workblok/utils"
 
 	"github.com/google/uuid"
 )
@@ -24,7 +24,7 @@ type Store struct {
 }
 
 func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.User, error) {
-	return s.DB.User.Create().SetUsername(form.UserName).SetPassword(form.Password).SetMail(form.Mail).Save(ctx)
+	return s.DB.User.Create().SetUsername(form.UserName).SetPassword(form.Password).SetEmail(form.Email).Save(ctx)
 }
 
 func (s *Store) CompleteTutorial(ctx context.Context, userId uuid.UUID) error {

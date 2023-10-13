@@ -1,8 +1,8 @@
 package middleware
 
 import (
-	"appname/conf"
 	"net/http"
+	"workblok/conf"
 
 	"github.com/gin-gonic/gin"
 )
