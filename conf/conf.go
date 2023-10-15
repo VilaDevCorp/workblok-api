@@ -25,6 +25,7 @@ type EnvConf struct {
 	CookieSecure   bool
 	CookieHttpOnly bool
 	CorsHost       string
+	FrontUrl       string
 }
 
 type DatabaseConf struct {

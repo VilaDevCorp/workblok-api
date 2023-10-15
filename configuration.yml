@@ -1,20 +1,22 @@
 Env: dev
 Dev:
-  CookieHost: 192.168.0.111
+  CookieHost: coollocalhost.com
   CookieSecure: false
   HttpOnly: false
-  CorsHost: http://192.168.0.111:3000
+  CorsHost: http://www.coollocalhost.com:3000
+  FrontUrl: http://www.coollocalhost.com:3000
 Prod:
   CookieHost: workblok.com
   CookieSecure: true
   HttpOnly: true
   CorsHost: https://workblok.com:3000
+  FrontUrl: https://workblok.com
 IP: 0.0.0.0
 Port: 8080
 JwtKey: workblok258SECRETkey
 Mail:
-  User: workblok@gmail.com
-  Pass: emaddwcfyqjexjum
+  User: workblokapp@gmail.com
+  Pass: qsgy ufir hoii spst
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
 DB:

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"math/rand"
 	"time"
+	"workblok/conf"
 	"workblok/ent"
 	"workblok/ent/user"
 	"workblok/mail"
@@ -106,10 +107,15 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 	codeStr := fmt.Sprintf("%06d", code)
 
 	_, err = s.DB.VerificationCode.Create().SetUserID(user.ID).SetExpireDate(expireDate).SetType(utils.VALIDATION_TYPE).SetCode(codeStr).SetValid(true).Save(ctx)
-	fmt.Println(err)
 	if err == nil {
-		err = mail.SendMail(form.Email, "Validation code", fmt.Sprintf("You can use the code %s to validate your account", codeStr))
+		hostUrl := conf.Get().Dev.FrontUrl
+		if conf.Get().Env == "prod" {
+			hostUrl = conf.Get().Prod.FrontUrl
+		}
+		err = mail.SendMail(form.Email, "Validation code", fmt.Sprintf("You can access to this link to validate your account: %s/validate/%s/%s",
+			hostUrl, form.Email, codeStr))
 	}
+	fmt.Println(err)
 	res := utils.OkCreated(user)
 	return res
 
