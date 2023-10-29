@@ -15,6 +15,7 @@ import (
 	"net/http"
 	"workblok/utils"
 
+	"entgo.io/ent/dialect/sql"
 	"github.com/google/uuid"
 )
 
@@ -81,13 +82,27 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	}
 
 	conditions = append(conditions, block.HasUserWith(user.IDEQ(form.UserId)))
+	if form.IsActive != nil {
+		if *form.IsActive {
+			conditions = append(conditions, block.FinishDateIsNil())
+		} else {
+			conditions = append(conditions, block.FinishDateNotNil())
+		}
+	}
+
+	if form.CreationDate != nil {
+		startedDayMoment := time.Date(form.CreationDate.Year(), form.CreationDate.Month(), form.CreationDate.Day(), 0, 0, 0, 0, time.UTC)
+		startedNextDayMoment := startedDayMoment.AddDate(0, 0, 1)
+		conditions = append(conditions, block.CreationDateGTE(startedDayMoment), block.CreationDateLT(startedNextDayMoment))
+	}
+
 	totalRows, err := query.Where(block.And(conditions...)).Count(ctx)
 	var content []*ent.Block
 	content, err = nil, nil
 	if limit > 0 {
-		content, err = query.Where(block.And(conditions...)).Offset(offset).Limit(limit).All(ctx)
+		content, err = query.Where(block.And(conditions...)).Offset(offset).Limit(limit).Order(block.ByCreationDate(sql.OrderDesc())).All(ctx)
 	} else {
-		content, err = query.Where(block.And(conditions...)).All(ctx)
+		content, err = query.Where(block.And(conditions...)).Order(block.ByCreationDate(sql.OrderDesc())).All(ctx)
 	}
 	if err != nil {
 		return nil, err

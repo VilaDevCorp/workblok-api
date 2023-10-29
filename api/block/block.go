@@ -150,6 +150,10 @@ func Search(c *gin.Context) {
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
+	jwt, _ := c.Cookie("JWT_TOKEN")
+	tokenClaims, _ := utils.ValidateToken(jwt)
+	form.UserId = tokenClaims.Id
+
 	svc := svc.Get()
 	result, err := svc.Block.Search(c.Request.Context(), form)
 	if err != nil {

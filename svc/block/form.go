@@ -1,6 +1,10 @@
 package block
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type CreateForm struct {
 	TargetMinutes int       `json:"targetMinutes"`
@@ -13,9 +17,11 @@ type UpdateForm struct {
 }
 
 type SearchForm struct {
-	UserId   uuid.UUID `json:"userId"`
-	Page     int       `json:"page"`
-	PageSize int       `json:"pageSize"`
+	UserId       uuid.UUID  `json:"userId"`
+	Page         int        `json:"page"`
+	PageSize     int        `json:"pageSize"`
+	CreationDate *time.Time `json:"creationDate"`
+	IsActive     *bool      `json:"isActive"`
 }
 
 type DeleteForm struct {
