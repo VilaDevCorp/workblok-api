@@ -62,7 +62,7 @@ func (s *Store) Finish(ctx context.Context, blockId uuid.UUID) (*ent.Block, erro
 }
 
 func (s *Store) Get(ctx context.Context, blockId uuid.UUID) (*ent.Block, error) {
-	return s.DB.Block.Get(ctx, blockId)
+	return s.DB.Block.Query().WithUser().Where(block.IDEQ(blockId)).Only(ctx)
 }
 
 func (s *Store) GetActive(ctx context.Context, userId uuid.UUID) (*ent.Block, error) {

@@ -20,7 +20,7 @@ func (Block) Mixin() []ent.Mixin {
 // Fields of the Block.
 func (Block) Fields() []ent.Field {
 	return []ent.Field{
-		field.Time("finishDate").Optional(),
+		field.Time("finishDate").Optional().Nillable(),
 		field.Int("targetMinutes").Default(5),
 		field.Int("distractionMinutes").Default(0),
 	}
