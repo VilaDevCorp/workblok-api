@@ -28,14 +28,12 @@ type Store struct {
 
 func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.VerificationCode, error) {
 	expireDate := time.Now().Add(time.Minute * 15)
-	fmt.Println(expireDate)
 	code := rand.Intn((1000000))
 	codeStr := fmt.Sprintf("%06d", code)
 	userId, err := s.DB.User.Query().Where(user.EmailEQ(form.Email)).FirstID(ctx)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(userId)
 	clientTx, err := s.DB.Tx(ctx)
 	prevValidCodes, err := clientTx.VerificationCode.Query().Where(verificationcode.And(verificationcode.HasUserWith(user.ID(userId)), verificationcode.Valid(true))).All(ctx)
 	for _, prevCode := range prevValidCodes {
@@ -105,13 +103,10 @@ func (s *Store) UseCode(ctx context.Context, form UseForm) utils.HttpResponse {
 		if err != nil {
 			return utils.InternalError(err)
 		}
-		fmt.Println(userId)
 		bytesPass, err := bcrypt.GenerateFromPassword([]byte(form.NewPass), 14)
 		if err != nil {
 			return utils.InternalError(err)
 		}
-		fmt.Println(bytesPass)
-		fmt.Println(string(bytesPass[:]))
 
 		_, err = clientTx.User.UpdateOneID(userId).SetPassword(string(bytesPass[:])).Save(ctx)
 		if err != nil {

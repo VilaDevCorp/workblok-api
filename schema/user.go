@@ -17,8 +17,10 @@ const (
 )
 
 type Config struct {
-	MaxTimePerBlock int    `json:"maxTimePerBlock"`
-	DisplayTimeMode string `json:"displayTimeMode"`
+	DailyTarget  *int  `json:"dailyTarget"` // in minutes
+	DarkMode     *bool `json:"darkMode"`
+	ExceededTime *bool `json:"exceededTime"`
+	TimeLimit    *int  `json:"timeLimit"` // in minutes
 }
 
 func (User) Mixin() []ent.Mixin {
@@ -34,7 +36,7 @@ func (User) Fields() []ent.Field {
 		field.String("Email").Unique().NotEmpty().StructTag(`json:"email"`),
 		field.String("Password").NotEmpty().StructTag(`json:"-"`),
 		field.Bool("EmailValid").StorageKey("email_valid").Default(false).StructTag(`json:"emailValid"`),
-		field.JSON("Config", &Config{}).Optional().StructTag(`json:"config"`),
+		field.JSON("Config", &Config{}).StructTag(`json:"config"`),
 		field.Bool("TutorialCompleted").StorageKey("tutorial_completed").Default(false).StructTag(`json:"tutorialCompleted"`),
 	}
 }

@@ -69,12 +69,6 @@ func (uu *UserUpdate) SetConfig(s *schema.Config) *UserUpdate {
 	return uu
 }
 
-// ClearConfig clears the value of the "Config" field.
-func (uu *UserUpdate) ClearConfig() *UserUpdate {
-	uu.mutation.ClearConfig()
-	return uu
-}
-
 // SetTutorialCompleted sets the "TutorialCompleted" field.
 func (uu *UserUpdate) SetTutorialCompleted(b bool) *UserUpdate {
 	uu.mutation.SetTutorialCompleted(b)
@@ -240,9 +234,6 @@ func (uu *UserUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	if value, ok := uu.mutation.Config(); ok {
 		_spec.SetField(user.FieldConfig, field.TypeJSON, value)
 	}
-	if uu.mutation.ConfigCleared() {
-		_spec.ClearField(user.FieldConfig, field.TypeJSON)
-	}
 	if value, ok := uu.mutation.TutorialCompleted(); ok {
 		_spec.SetField(user.FieldTutorialCompleted, field.TypeBool, value)
 	}
@@ -391,12 +382,6 @@ func (uuo *UserUpdateOne) SetNillableEmailValid(b *bool) *UserUpdateOne {
 // SetConfig sets the "Config" field.
 func (uuo *UserUpdateOne) SetConfig(s *schema.Config) *UserUpdateOne {
 	uuo.mutation.SetConfig(s)
-	return uuo
-}
-
-// ClearConfig clears the value of the "Config" field.
-func (uuo *UserUpdateOne) ClearConfig() *UserUpdateOne {
-	uuo.mutation.ClearConfig()
 	return uuo
 }
 
@@ -594,9 +579,6 @@ func (uuo *UserUpdateOne) sqlSave(ctx context.Context) (_node *User, err error) 
 	}
 	if value, ok := uuo.mutation.Config(); ok {
 		_spec.SetField(user.FieldConfig, field.TypeJSON, value)
-	}
-	if uuo.mutation.ConfigCleared() {
-		_spec.ClearField(user.FieldConfig, field.TypeJSON)
 	}
 	if value, ok := uuo.mutation.TutorialCompleted(); ok {
 		_spec.SetField(user.FieldTutorialCompleted, field.TypeBool, value)

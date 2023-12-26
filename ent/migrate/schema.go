@@ -40,7 +40,7 @@ var (
 		{Name: "email", Type: field.TypeString, Unique: true},
 		{Name: "password", Type: field.TypeString},
 		{Name: "email_valid", Type: field.TypeBool, Default: false},
-		{Name: "config", Type: field.TypeJSON, Nullable: true},
+		{Name: "config", Type: field.TypeJSON},
 		{Name: "tutorial_completed", Type: field.TypeBool, Default: false},
 	}
 	// UsersTable holds the schema information for the "users" table.

@@ -1,7 +1,6 @@
 package block
 
 import (
-	"fmt"
 	"net/http"
 	"workblok/svc"
 	"workblok/svc/block"
@@ -79,10 +78,15 @@ func Finish(c *gin.Context) {
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
+	isAutoParam := c.Query("auto")
+	isAuto := false
+	if isAutoParam == "true" {
+		isAuto = true
+	}
+
 	svc := svc.Get()
 	block, err := svc.Block.Get(c, parsedId)
 	if err != nil {
-		fmt.Print(err)
 		res := utils.NotFoundEntity(string(parsedId.String()))
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
@@ -94,7 +98,7 @@ func Finish(c *gin.Context) {
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
-	result, err := svc.Block.Finish(c.Request.Context(), parsedId)
+	result, err := svc.Block.Finish(c.Request.Context(), parsedId, isAuto)
 	if err != nil {
 		res := utils.InternalError(err)
 		c.AbortWithStatusJSON(res.Status, res.Result)
@@ -158,7 +162,6 @@ func Search(c *gin.Context) {
 	result, err := svc.Block.Search(c.Request.Context(), form)
 	if err != nil {
 		res := utils.InternalError(err)
-		fmt.Print(res)
 		c.AbortWithStatusJSON(res.Status, res.Result)
 		return
 	}
@@ -185,5 +188,27 @@ func Delete(c *gin.Context) {
 		return
 	}
 	res := utils.OkDeleted()
+	c.JSON(res.Status, res.Result)
+}
+
+func Stats(c *gin.Context) {
+	var form block.StatsForm
+	err := c.ShouldBind(&form)
+	if err != nil {
+		res := utils.BadRequest(form, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	jwt, _ := c.Cookie("JWT_TOKEN")
+	tokenClaims, _ := utils.ValidateToken(jwt)
+	form.UserId = &tokenClaims.Id
+	svc := svc.Get()
+	result, err := svc.Block.Stats(c.Request.Context(), form)
+	if err != nil {
+		res := utils.InternalError(err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	res := utils.OkOperation(result)
 	c.JSON(res.Status, res.Result)
 }

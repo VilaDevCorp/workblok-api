@@ -28,6 +28,28 @@ func Create(c *gin.Context) {
 	c.JSON(res.Status, res.Result)
 }
 
+func ConfUpdate(c *gin.Context) {
+	var form user.ConfigForm
+	err := c.ShouldBind(&form)
+	if err != nil {
+		res := utils.BadRequest(form, err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	svc := svc.Get()
+	jwt, _ := c.Cookie("JWT_TOKEN")
+	tokenClaims, _ := utils.ValidateToken(jwt)
+	form.Id = &tokenClaims.Id
+	result, err := svc.User.Update(c.Request.Context(), form)
+	if err != nil {
+		res := utils.InternalError(err)
+		c.AbortWithStatusJSON(res.Status, res.Result)
+		return
+	}
+	res := utils.OkUpdated(result)
+	c.JSON(res.Status, res.Result)
+}
+
 func CompleteTutorial(c *gin.Context) {
 	unparsedId, _ := c.Params.Get("id")
 	parsedId, err := uuid.Parse(unparsedId)

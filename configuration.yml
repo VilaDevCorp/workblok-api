@@ -1,10 +1,10 @@
 Env: dev
 Dev:
-  CookieHost: coollocalhost.com
+  CookieHost:  192.168.1.139
   CookieSecure: false
   HttpOnly: false
-  CorsHost: http://www.coollocalhost.com:3000
-  FrontUrl: http://www.coollocalhost.com:3000
+  CorsHost: http://192.168.1.139:3000
+  FrontUrl: http://192.168.1.139:3000
 Prod:
   CookieHost: workblok.com
   CookieSecure: true
@@ -20,8 +20,8 @@ Mail:
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
 DB:
-  Port: 3306
-  Host: db
+  Port: 3307
+  Host: 127.0.0.1
   User: root
   Pass: 1234
   DB: workblok

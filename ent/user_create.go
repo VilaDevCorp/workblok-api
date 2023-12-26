@@ -219,6 +219,9 @@ func (uc *UserCreate) check() error {
 	if _, ok := uc.mutation.EmailValid(); !ok {
 		return &ValidationError{Name: "EmailValid", err: errors.New(`ent: missing required field "User.EmailValid"`)}
 	}
+	if _, ok := uc.mutation.Config(); !ok {
+		return &ValidationError{Name: "Config", err: errors.New(`ent: missing required field "User.Config"`)}
+	}
 	if _, ok := uc.mutation.TutorialCompleted(); !ok {
 		return &ValidationError{Name: "TutorialCompleted", err: errors.New(`ent: missing required field "User.TutorialCompleted"`)}
 	}

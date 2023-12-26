@@ -210,7 +210,7 @@ func (m *BlockMutation) FinishDate() (r time.Time, exists bool) {
 // OldFinishDate returns the old "finishDate" field's value of the Block entity.
 // If the Block object wasn't provided to the builder, the object is fetched from the database.
 // An error is returned if the mutation operation is not UpdateOne, or the database query fails.
-func (m *BlockMutation) OldFinishDate(ctx context.Context) (v time.Time, err error) {
+func (m *BlockMutation) OldFinishDate(ctx context.Context) (v *time.Time, err error) {
 	if !m.op.Is(OpUpdateOne) {
 		return v, errors.New("OldFinishDate is only allowed on UpdateOne operations")
 	}
@@ -1025,22 +1025,9 @@ func (m *UserMutation) OldConfig(ctx context.Context) (v *schema.Config, err err
 	return oldValue.Config, nil
 }
 
-// ClearConfig clears the value of the "Config" field.
-func (m *UserMutation) ClearConfig() {
-	m._Config = nil
-	m.clearedFields[user.FieldConfig] = struct{}{}
-}
-
-// ConfigCleared returns if the "Config" field was cleared in this mutation.
-func (m *UserMutation) ConfigCleared() bool {
-	_, ok := m.clearedFields[user.FieldConfig]
-	return ok
-}
-
 // ResetConfig resets all changes to the "Config" field.
 func (m *UserMutation) ResetConfig() {
 	m._Config = nil
-	delete(m.clearedFields, user.FieldConfig)
 }
 
 // SetTutorialCompleted sets the "TutorialCompleted" field.
@@ -1375,11 +1362,7 @@ func (m *UserMutation) AddField(name string, value ent.Value) error {
 // ClearedFields returns all nullable fields that were cleared during this
 // mutation.
 func (m *UserMutation) ClearedFields() []string {
-	var fields []string
-	if m.FieldCleared(user.FieldConfig) {
-		fields = append(fields, user.FieldConfig)
-	}
-	return fields
+	return nil
 }
 
 // FieldCleared returns a boolean indicating if a field with the given name was
@@ -1392,11 +1375,6 @@ func (m *UserMutation) FieldCleared(name string) bool {
 // ClearField clears the value of the field with the given name. It returns an
 // error if the field is not defined in the schema.
 func (m *UserMutation) ClearField(name string) error {
-	switch name {
-	case user.FieldConfig:
-		m.ClearConfig()
-		return nil
-	}
 	return fmt.Errorf("unknown User nullable field %s", name)
 }
 

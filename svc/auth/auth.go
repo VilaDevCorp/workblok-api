@@ -9,6 +9,7 @@ import (
 	"workblok/ent"
 	"workblok/ent/user"
 	"workblok/mail"
+	"workblok/schema"
 	"workblok/utils"
 
 	"golang.org/x/crypto/bcrypt"
@@ -97,7 +98,7 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 
 	}
 
-	user, err := s.DB.User.Create().SetUsername(form.UserName).SetPassword(string(bytesPass[:])).SetEmail(form.Email).Save(ctx)
+	user, err := s.DB.User.Create().SetUsername(form.UserName).SetPassword(string(bytesPass[:])).SetEmail(form.Email).SetConfig(&schema.Config{}).Save(ctx)
 	if err != nil {
 		res := utils.InternalError(err)
 		return res
@@ -115,7 +116,6 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 		err = mail.SendMail(form.Email, "Validation code", fmt.Sprintf("You can access to this link to validate your account: %s/validate/%s/%s",
 			hostUrl, form.Email, codeStr))
 	}
-	fmt.Println(err)
 	res := utils.OkCreated(user)
 	return res
 

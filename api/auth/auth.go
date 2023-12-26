@@ -32,8 +32,6 @@ func Login(c *gin.Context) {
 			c.SetCookie("JWT_TOKEN", *tokenString, 30*24*60*60*1000, "/", conf.Dev.CookieHost, conf.Dev.CookieSecure, conf.Dev.CookieHttpOnly)
 		}
 	}
-	fmt.Println(res.Status)
-	fmt.Println(res.Result)
 	c.JSON(res.Status, res.Result)
 }
 

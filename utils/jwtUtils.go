@@ -2,7 +2,6 @@ package utils
 
 import (
 	"errors"
-	"fmt"
 	"time"
 	"workblok/conf"
 
@@ -21,8 +20,6 @@ type JWTClaim struct {
 func GenerateJWT(id string, mail string, username string, csrf string) (tokenString string, err error) {
 	conf := conf.Get()
 	expirationTime := time.Now().Add(24 * time.Hour)
-	fmt.Println(expirationTime)
-	fmt.Println(jwt.NewNumericDate(expirationTime))
 	uuidId, _ := uuid.Parse(id)
 	issuer := conf.Dev.CookieHost
 	if conf.Env == "prod" {

@@ -1,19 +1,19 @@
 package utils
 
-type ActivityStatElement struct {
-	ActivityName string `json:"activityName"`
-	ActivityIcon string `json:"activityIcon"`
-	NTimes       int    `json:"nTimes"`
+type PeriodStats struct {
+	WorkingTime     float64 `json:"workingTime"`
+	DistractionTime float64 `json:"distractionTime"`
 }
 
 type StatsResult struct {
-	ScheduledDans       int                    `json:"scheduledDans"`
-	CompletedDans       int                    `json:"completedDans"`
-	CompletedPercentage float32                `json:"completedPercentage"`
-	DailyAvgScheduled   interface{}            `json:"dailyAvgScheduled"`
-	DailyAvgCompleted   interface{}            `json:"dailyAvgCompleted"`
-	RealStartDate       string                 `json:"realStartDate"`
-	RealFinishDate      string                 `json:"realFinishDate"`
-	NWeeksOfMonth       int                    `json:"nWeeksOfMonth"`
-	ActivityInfo        *[]ActivityStatElement `json:"activityInfo"`
+	WorkingTime             int                  `json:"workingTime"` // in seconds
+	DistractionTime         int                  `json:"distractionTime"`
+	DailyAvgWorkingTime     *int                 `json:"dailyAvgWorkingTime"`
+	DailyAvgDistractionTime *int                 `json:"dailyAvgDistractionTime"`
+	RealStartDate           string               `json:"realStartDate"`
+	RealFinishDate          string               `json:"realFinishDate"`
+	NWeeksOfMonth           int                  `json:"nWeeksOfMonth"`
+	YearInfo                *map[int]PeriodStats `json:"yearInfo"`
+	MonthInfo               *map[int]PeriodStats `json:"monthInfo"`
+	WeekInfo                *map[int]PeriodStats `json:"weekInfo"`
 }

@@ -291,7 +291,7 @@ func (c *BlockClient) Query() *BlockQuery {
 
 // Get returns a Block entity by its id.
 func (c *BlockClient) Get(ctx context.Context, id uuid.UUID) (*Block, error) {
-	return c.Query().Where(block.ID(id)).WithUser().Only(ctx)
+	return c.Query().Where(block.ID(id)).Only(ctx)
 }
 
 // GetX is like Get, but panics if an error occurs.

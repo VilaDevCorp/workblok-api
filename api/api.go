@@ -41,6 +41,7 @@ func GetRouter() *gin.Engine {
 	priv.GET("/block/:id", block.Get)
 	priv.GET("/block/active", block.GetActive)
 	priv.POST("/block/search", block.Search)
+	priv.POST("/block/stats", block.Stats)
 	priv.GET("/self", auth.Self)
 	priv.DELETE("/block", block.Delete)
 	priv.POST("/user", user.Create)
@@ -48,6 +49,7 @@ func GetRouter() *gin.Engine {
 	priv.GET("/user/:id", user.Get)
 	priv.POST("/user/search", user.Search)
 	priv.DELETE("/user/:id", user.Delete)
+	priv.PATCH("/user/conf", user.ConfUpdate)
 	return api
 }
 

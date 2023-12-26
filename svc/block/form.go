@@ -27,3 +27,11 @@ type SearchForm struct {
 type DeleteForm struct {
 	BlockIds []uuid.UUID `json:"blockIds"`
 }
+
+type StatsForm struct {
+	UserId *uuid.UUID `json:"userId"`
+	Year   *int       `json:"year"`
+	Month  *int       `json:"month"`
+	Week   *int       `json:"week"`
+	Day    *int       `json:"day"`
+}

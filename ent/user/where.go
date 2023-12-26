@@ -331,16 +331,6 @@ func EmailValidNEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldNEQ(FieldEmailValid, v))
 }
 
-// ConfigIsNil applies the IsNil predicate on the "Config" field.
-func ConfigIsNil() predicate.User {
-	return predicate.User(sql.FieldIsNull(FieldConfig))
-}
-
-// ConfigNotNil applies the NotNil predicate on the "Config" field.
-func ConfigNotNil() predicate.User {
-	return predicate.User(sql.FieldNotNull(FieldConfig))
-}
-
 // TutorialCompletedEQ applies the EQ predicate on the "TutorialCompleted" field.
 func TutorialCompletedEQ(v bool) predicate.User {
 	return predicate.User(sql.FieldEQ(FieldTutorialCompleted, v))

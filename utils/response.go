@@ -50,7 +50,6 @@ func NotFoundEntity(id string) HttpResponse {
 }
 
 func InternalError(err error) HttpResponse {
-	fmt.Print(err)
 	return HttpResponse{Status: http.StatusInternalServerError, Result: ResponseResult{Message: "Internal error occurred", Err: err}}
 }
 

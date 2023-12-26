@@ -1,6 +1,10 @@
 package user
 
-import "github.com/google/uuid"
+import (
+	"workblok/schema"
+
+	"github.com/google/uuid"
+)
 
 type CreateForm struct {
 	UserName string `json:"userName" binding:"required"`
@@ -11,6 +15,11 @@ type CreateForm struct {
 type UpdateForm struct {
 	Id       uuid.UUID `json:"id" binding:"required"`
 	Password *string   `json:"password"`
+}
+
+type ConfigForm struct {
+	Id   *uuid.UUID     `json:"id"`
+	Conf *schema.Config `json:"conf"`
 }
 
 type SearchForm struct {

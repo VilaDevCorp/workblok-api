@@ -211,7 +211,7 @@ func (bc *BlockCreate) createSpec() (*Block, *sqlgraph.CreateSpec) {
 	}
 	if value, ok := bc.mutation.FinishDate(); ok {
 		_spec.SetField(block.FieldFinishDate, field.TypeTime, value)
-		_node.FinishDate = value
+		_node.FinishDate = &value
 	}
 	if value, ok := bc.mutation.TargetMinutes(); ok {
 		_spec.SetField(block.FieldTargetMinutes, field.TypeInt, value)

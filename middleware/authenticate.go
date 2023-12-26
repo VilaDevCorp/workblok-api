@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"fmt"
 	"workblok/utils"
 
 	"github.com/gin-gonic/gin"
@@ -23,7 +22,6 @@ func Authentication() gin.HandlerFunc {
 		}
 		tokenClaims, jwtError := utils.ValidateToken(jwt)
 		if jwtError != nil {
-			fmt.Print(jwtError)
 			res := utils.Forbidden("Invalid or expired JWT ", err)
 			c.AbortWithStatusJSON(res.Status, res.Result)
 			return

@@ -11,12 +11,12 @@ services:
       environment:
         MYSQL_ROOT_PASSWORD: 1234
         MYSQL_DATABASE: workblok
-  api: 
-    image: workblok-api:latest
-    restart: always
-    ports:
-      - "8080:8080"
-    depends_on:
-      - db
+  # api: 
+  #   image: workblok-api:latest
+  #   restart: always
+  #   ports:
+  #     - "8080:8080"
+  #   depends_on:
+  #     - db
 volumes:
   db-volume:

@@ -22,7 +22,7 @@ type Block struct {
 	// CreationDate holds the value of the "creationDate" field.
 	CreationDate time.Time `json:"creationDate,omitempty"`
 	// FinishDate holds the value of the "finishDate" field.
-	FinishDate time.Time `json:"finishDate,omitempty"`
+	FinishDate *time.Time `json:"finishDate,omitempty"`
 	// TargetMinutes holds the value of the "targetMinutes" field.
 	TargetMinutes int `json:"targetMinutes,omitempty"`
 	// DistractionMinutes holds the value of the "distractionMinutes" field.
@@ -100,7 +100,8 @@ func (b *Block) assignValues(columns []string, values []any) error {
 			if value, ok := values[i].(*sql.NullTime); !ok {
 				return fmt.Errorf("unexpected type %T for field finishDate", values[i])
 			} else if value.Valid {
-				b.FinishDate = value.Time
+				b.FinishDate = new(time.Time)
+				*b.FinishDate = value.Time
 			}
 		case block.FieldTargetMinutes:
 			if value, ok := values[i].(*sql.NullInt64); !ok {
@@ -165,8 +166,10 @@ func (b *Block) String() string {
 	builder.WriteString("creationDate=")
 	builder.WriteString(b.CreationDate.Format(time.ANSIC))
 	builder.WriteString(", ")
-	builder.WriteString("finishDate=")
-	builder.WriteString(b.FinishDate.Format(time.ANSIC))
+	if v := b.FinishDate; v != nil {
+		builder.WriteString("finishDate=")
+		builder.WriteString(v.Format(time.ANSIC))
+	}
 	builder.WriteString(", ")
 	builder.WriteString("targetMinutes=")
 	builder.WriteString(fmt.Sprintf("%v", b.TargetMinutes))
