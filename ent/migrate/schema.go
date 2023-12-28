@@ -16,6 +16,7 @@ var (
 		{Name: "finish_date", Type: field.TypeTime, Nullable: true},
 		{Name: "target_minutes", Type: field.TypeInt, Default: 5},
 		{Name: "distraction_minutes", Type: field.TypeInt, Default: 0},
+		{Name: "tag", Type: field.TypeString},
 		{Name: "user_blocks", Type: field.TypeUUID},
 	}
 	// BlocksTable holds the schema information for the "blocks" table.
@@ -26,7 +27,7 @@ var (
 		ForeignKeys: []*schema.ForeignKey{
 			{
 				Symbol:     "blocks_users_blocks",
-				Columns:    []*schema.Column{BlocksColumns[5]},
+				Columns:    []*schema.Column{BlocksColumns[6]},
 				RefColumns: []*schema.Column{UsersColumns[0]},
 				OnDelete:   schema.NoAction,
 			},

@@ -45,6 +45,7 @@ type BlockMutation struct {
 	addtargetMinutes      *int
 	distractionMinutes    *int
 	adddistractionMinutes *int
+	tag                   *string
 	clearedFields         map[string]struct{}
 	user                  *uuid.UUID
 	cleareduser           bool
@@ -354,6 +355,42 @@ func (m *BlockMutation) ResetDistractionMinutes() {
 	m.adddistractionMinutes = nil
 }
 
+// SetTag sets the "tag" field.
+func (m *BlockMutation) SetTag(s string) {
+	m.tag = &s
+}
+
+// Tag returns the value of the "tag" field in the mutation.
+func (m *BlockMutation) Tag() (r string, exists bool) {
+	v := m.tag
+	if v == nil {
+		return
+	}
+	return *v, true
+}
+
+// OldTag returns the old "tag" field's value of the Block entity.
+// If the Block object wasn't provided to the builder, the object is fetched from the database.
+// An error is returned if the mutation operation is not UpdateOne, or the database query fails.
+func (m *BlockMutation) OldTag(ctx context.Context) (v *string, err error) {
+	if !m.op.Is(OpUpdateOne) {
+		return v, errors.New("OldTag is only allowed on UpdateOne operations")
+	}
+	if m.id == nil || m.oldValue == nil {
+		return v, errors.New("OldTag requires an ID field in the mutation")
+	}
+	oldValue, err := m.oldValue(ctx)
+	if err != nil {
+		return v, fmt.Errorf("querying old value for OldTag: %w", err)
+	}
+	return oldValue.Tag, nil
+}
+
+// ResetTag resets all changes to the "tag" field.
+func (m *BlockMutation) ResetTag() {
+	m.tag = nil
+}
+
 // SetUserID sets the "user" edge to the User entity by id.
 func (m *BlockMutation) SetUserID(id uuid.UUID) {
 	m.user = &id
@@ -427,7 +464,7 @@ func (m *BlockMutation) Type() string {
 // order to get all numeric fields that were incremented/decremented, call
 // AddedFields().
 func (m *BlockMutation) Fields() []string {
-	fields := make([]string, 0, 4)
+	fields := make([]string, 0, 5)
 	if m.creationDate != nil {
 		fields = append(fields, block.FieldCreationDate)
 	}
@@ -439,6 +476,9 @@ func (m *BlockMutation) Fields() []string {
 	}
 	if m.distractionMinutes != nil {
 		fields = append(fields, block.FieldDistractionMinutes)
+	}
+	if m.tag != nil {
+		fields = append(fields, block.FieldTag)
 	}
 	return fields
 }
@@ -456,6 +496,8 @@ func (m *BlockMutation) Field(name string) (ent.Value, bool) {
 		return m.TargetMinutes()
 	case block.FieldDistractionMinutes:
 		return m.DistractionMinutes()
+	case block.FieldTag:
+		return m.Tag()
 	}
 	return nil, false
 }
@@ -473,6 +515,8 @@ func (m *BlockMutation) OldField(ctx context.Context, name string) (ent.Value, e
 		return m.OldTargetMinutes(ctx)
 	case block.FieldDistractionMinutes:
 		return m.OldDistractionMinutes(ctx)
+	case block.FieldTag:
+		return m.OldTag(ctx)
 	}
 	return nil, fmt.Errorf("unknown Block field %s", name)
 }
@@ -509,6 +553,13 @@ func (m *BlockMutation) SetField(name string, value ent.Value) error {
 			return fmt.Errorf("unexpected type %T for field %s", value, name)
 		}
 		m.SetDistractionMinutes(v)
+		return nil
+	case block.FieldTag:
+		v, ok := value.(string)
+		if !ok {
+			return fmt.Errorf("unexpected type %T for field %s", value, name)
+		}
+		m.SetTag(v)
 		return nil
 	}
 	return fmt.Errorf("unknown Block field %s", name)
@@ -606,6 +657,9 @@ func (m *BlockMutation) ResetField(name string) error {
 		return nil
 	case block.FieldDistractionMinutes:
 		m.ResetDistractionMinutes()
+		return nil
+	case block.FieldTag:
+		m.ResetTag()
 		return nil
 	}
 	return fmt.Errorf("unknown Block field %s", name)

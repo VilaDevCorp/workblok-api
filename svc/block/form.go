@@ -9,6 +9,7 @@ import (
 type CreateForm struct {
 	TargetMinutes int       `json:"targetMinutes"`
 	UserId        uuid.UUID `json:"userId,omitempty"`
+	Tag           string    `json:"tag,omitempty"`
 }
 
 type UpdateForm struct {

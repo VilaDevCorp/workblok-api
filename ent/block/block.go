@@ -23,6 +23,8 @@ const (
 	FieldTargetMinutes = "target_minutes"
 	// FieldDistractionMinutes holds the string denoting the distractionminutes field in the database.
 	FieldDistractionMinutes = "distraction_minutes"
+	// FieldTag holds the string denoting the tag field in the database.
+	FieldTag = "tag"
 	// EdgeUser holds the string denoting the user edge name in mutations.
 	EdgeUser = "user"
 	// Table holds the table name of the block in the database.
@@ -43,6 +45,7 @@ var Columns = []string{
 	FieldFinishDate,
 	FieldTargetMinutes,
 	FieldDistractionMinutes,
+	FieldTag,
 }
 
 // ForeignKeys holds the SQL foreign-keys that are owned by the "blocks"
@@ -103,6 +106,11 @@ func ByTargetMinutes(opts ...sql.OrderTermOption) OrderOption {
 // ByDistractionMinutes orders the results by the distractionMinutes field.
 func ByDistractionMinutes(opts ...sql.OrderTermOption) OrderOption {
 	return sql.OrderByField(FieldDistractionMinutes, opts...).ToFunc()
+}
+
+// ByTag orders the results by the tag field.
+func ByTag(opts ...sql.OrderTermOption) OrderOption {
+	return sql.OrderByField(FieldTag, opts...).ToFunc()
 }
 
 // ByUserField orders the results by user field.

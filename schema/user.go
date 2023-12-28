@@ -17,10 +17,11 @@ const (
 )
 
 type Config struct {
-	DailyTarget  *int  `json:"dailyTarget"` // in minutes
-	DarkMode     *bool `json:"darkMode"`
-	ExceededTime *bool `json:"exceededTime"`
-	TimeLimit    *int  `json:"timeLimit"` // in minutes
+	DailyTarget  *int      `json:"dailyTarget"` // in minutes
+	DarkMode     *bool     `json:"darkMode"`
+	ExceededTime *bool     `json:"exceededTime"`
+	TimeLimit    *int      `json:"timeLimit"` // in minutes
+	Tags         *[]string `json:"tags"`
 }
 
 func (User) Mixin() []ent.Mixin {

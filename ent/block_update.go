@@ -92,6 +92,12 @@ func (bu *BlockUpdate) AddDistractionMinutes(i int) *BlockUpdate {
 	return bu
 }
 
+// SetTag sets the "tag" field.
+func (bu *BlockUpdate) SetTag(s string) *BlockUpdate {
+	bu.mutation.SetTag(s)
+	return bu
+}
+
 // SetUserID sets the "user" edge to the User entity by ID.
 func (bu *BlockUpdate) SetUserID(id uuid.UUID) *BlockUpdate {
 	bu.mutation.SetUserID(id)
@@ -178,6 +184,9 @@ func (bu *BlockUpdate) sqlSave(ctx context.Context) (n int, err error) {
 	}
 	if value, ok := bu.mutation.AddedDistractionMinutes(); ok {
 		_spec.AddField(block.FieldDistractionMinutes, field.TypeInt, value)
+	}
+	if value, ok := bu.mutation.Tag(); ok {
+		_spec.SetField(block.FieldTag, field.TypeString, value)
 	}
 	if bu.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{
@@ -287,6 +296,12 @@ func (buo *BlockUpdateOne) SetNillableDistractionMinutes(i *int) *BlockUpdateOne
 // AddDistractionMinutes adds i to the "distractionMinutes" field.
 func (buo *BlockUpdateOne) AddDistractionMinutes(i int) *BlockUpdateOne {
 	buo.mutation.AddDistractionMinutes(i)
+	return buo
+}
+
+// SetTag sets the "tag" field.
+func (buo *BlockUpdateOne) SetTag(s string) *BlockUpdateOne {
+	buo.mutation.SetTag(s)
 	return buo
 }
 
@@ -406,6 +421,9 @@ func (buo *BlockUpdateOne) sqlSave(ctx context.Context) (_node *Block, err error
 	}
 	if value, ok := buo.mutation.AddedDistractionMinutes(); ok {
 		_spec.AddField(block.FieldDistractionMinutes, field.TypeInt, value)
+	}
+	if value, ok := buo.mutation.Tag(); ok {
+		_spec.SetField(block.FieldTag, field.TypeString, value)
 	}
 	if buo.mutation.UserCleared() {
 		edge := &sqlgraph.EdgeSpec{

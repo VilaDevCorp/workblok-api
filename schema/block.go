@@ -23,6 +23,7 @@ func (Block) Fields() []ent.Field {
 		field.Time("finishDate").Optional().Nillable(),
 		field.Int("targetMinutes").Default(5),
 		field.Int("distractionMinutes").Default(0),
+		field.String("tag").Nillable(),
 	}
 }
 

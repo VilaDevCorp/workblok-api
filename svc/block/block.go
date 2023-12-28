@@ -41,7 +41,7 @@ func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.Block, error,
 	if hasActiveBlock {
 		return nil, nil, http.StatusConflict
 	}
-	createdBlock, err := s.DB.Block.Create().SetTargetMinutes(form.TargetMinutes).SetUserID(form.UserId).Save(ctx)
+	createdBlock, err := s.DB.Block.Create().SetTargetMinutes(form.TargetMinutes).SetUserID(form.UserId).SetTag(form.Tag).Save(ctx)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}

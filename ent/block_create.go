@@ -78,6 +78,12 @@ func (bc *BlockCreate) SetNillableDistractionMinutes(i *int) *BlockCreate {
 	return bc
 }
 
+// SetTag sets the "tag" field.
+func (bc *BlockCreate) SetTag(s string) *BlockCreate {
+	bc.mutation.SetTag(s)
+	return bc
+}
+
 // SetID sets the "id" field.
 func (bc *BlockCreate) SetID(u uuid.UUID) *BlockCreate {
 	bc.mutation.SetID(u)
@@ -167,6 +173,9 @@ func (bc *BlockCreate) check() error {
 	if _, ok := bc.mutation.DistractionMinutes(); !ok {
 		return &ValidationError{Name: "distractionMinutes", err: errors.New(`ent: missing required field "Block.distractionMinutes"`)}
 	}
+	if _, ok := bc.mutation.Tag(); !ok {
+		return &ValidationError{Name: "tag", err: errors.New(`ent: missing required field "Block.tag"`)}
+	}
 	if _, ok := bc.mutation.UserID(); !ok {
 		return &ValidationError{Name: "user", err: errors.New(`ent: missing required edge "Block.user"`)}
 	}
@@ -220,6 +229,10 @@ func (bc *BlockCreate) createSpec() (*Block, *sqlgraph.CreateSpec) {
 	if value, ok := bc.mutation.DistractionMinutes(); ok {
 		_spec.SetField(block.FieldDistractionMinutes, field.TypeInt, value)
 		_node.DistractionMinutes = value
+	}
+	if value, ok := bc.mutation.Tag(); ok {
+		_spec.SetField(block.FieldTag, field.TypeString, value)
+		_node.Tag = &value
 	}
 	if nodes := bc.mutation.UserIDs(); len(nodes) > 0 {
 		edge := &sqlgraph.EdgeSpec{

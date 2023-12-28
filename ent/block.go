@@ -27,6 +27,8 @@ type Block struct {
 	TargetMinutes int `json:"targetMinutes,omitempty"`
 	// DistractionMinutes holds the value of the "distractionMinutes" field.
 	DistractionMinutes int `json:"distractionMinutes,omitempty"`
+	// Tag holds the value of the "tag" field.
+	Tag *string `json:"tag,omitempty"`
 	// Edges holds the relations/edges for other nodes in the graph.
 	// The values are being populated by the BlockQuery when eager-loading is set.
 	Edges        BlockEdges `json:"edges"`
@@ -63,6 +65,8 @@ func (*Block) scanValues(columns []string) ([]any, error) {
 		switch columns[i] {
 		case block.FieldTargetMinutes, block.FieldDistractionMinutes:
 			values[i] = new(sql.NullInt64)
+		case block.FieldTag:
+			values[i] = new(sql.NullString)
 		case block.FieldCreationDate, block.FieldFinishDate:
 			values[i] = new(sql.NullTime)
 		case block.FieldID:
@@ -114,6 +118,13 @@ func (b *Block) assignValues(columns []string, values []any) error {
 				return fmt.Errorf("unexpected type %T for field distractionMinutes", values[i])
 			} else if value.Valid {
 				b.DistractionMinutes = int(value.Int64)
+			}
+		case block.FieldTag:
+			if value, ok := values[i].(*sql.NullString); !ok {
+				return fmt.Errorf("unexpected type %T for field tag", values[i])
+			} else if value.Valid {
+				b.Tag = new(string)
+				*b.Tag = value.String
 			}
 		case block.ForeignKeys[0]:
 			if value, ok := values[i].(*sql.NullScanner); !ok {
@@ -176,6 +187,11 @@ func (b *Block) String() string {
 	builder.WriteString(", ")
 	builder.WriteString("distractionMinutes=")
 	builder.WriteString(fmt.Sprintf("%v", b.DistractionMinutes))
+	builder.WriteString(", ")
+	if v := b.Tag; v != nil {
+		builder.WriteString("tag=")
+		builder.WriteString(*v)
+	}
 	builder.WriteByte(')')
 	return builder.String()
 }
