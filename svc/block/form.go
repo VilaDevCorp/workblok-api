@@ -35,4 +35,5 @@ type StatsForm struct {
 	Month  *int       `json:"month"`
 	Week   *int       `json:"week"`
 	Day    *int       `json:"day"`
+	Tag    *string    `json:"tag"`
 }

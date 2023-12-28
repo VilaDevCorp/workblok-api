@@ -16,4 +16,5 @@ type StatsResult struct {
 	YearInfo                *map[int]PeriodStats `json:"yearInfo"`
 	MonthInfo               *map[int]PeriodStats `json:"monthInfo"`
 	WeekInfo                *map[int]PeriodStats `json:"weekInfo"`
+	Tags                    *[]string            `json:"tags"`
 }

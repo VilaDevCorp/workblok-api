@@ -149,6 +149,9 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 	var nWeeks int
 	var conditions []predicate.Block
 	conditions = append(conditions, block.HasUserWith(user.IDEQ(*form.UserId)))
+	if (form.Tag != nil) && (*form.Tag != "") {
+		conditions = append(conditions, block.TagEQ(*form.Tag))
+	}
 
 	//Calculate start and finish dates and add to the conditions if there is a date filter
 	if form.Year != nil {
@@ -217,8 +220,13 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 		weekInfo = make(map[int]utils.PeriodStats)
 	}
 
+	var blockTags []string = []string{}
+
 	for _, block := range blocks {
 		if block.FinishDate != nil {
+			if block.Tag != nil && *block.Tag != "" {
+				blockTags = append(blockTags, *block.Tag)
+			}
 			blockWorkingTime := int(block.FinishDate.Sub(block.CreationDate).Seconds() - (float64(block.DistractionMinutes) / 60))
 			workingTime += blockWorkingTime
 			distractionTime += block.DistractionMinutes * 60
@@ -287,7 +295,7 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 	}
 
 	result := utils.StatsResult{WorkingTime: workingTime, DistractionTime: distractionTime, DailyAvgWorkingTime: dailyAvgWorkingTime, DailyAvgDistractionTime: dailyAvgDistractionTime,
-		YearInfo: &yearInfo, MonthInfo: &monthInfo, WeekInfo: &weekInfo, RealStartDate: startDate.Format("2006-01-02"), RealFinishDate: finishDate.Format("2006-01-02"), NWeeksOfMonth: nWeeks}
+		YearInfo: &yearInfo, MonthInfo: &monthInfo, WeekInfo: &weekInfo, RealStartDate: startDate.Format("2006-01-02"), RealFinishDate: finishDate.Format("2006-01-02"), NWeeksOfMonth: nWeeks, Tags: &blockTags}
 
 	return &result, nil
 }
