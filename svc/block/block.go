@@ -149,9 +149,6 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 	var nWeeks int
 	var conditions []predicate.Block
 	conditions = append(conditions, block.HasUserWith(user.IDEQ(*form.UserId)))
-	if (form.Tag != nil) && (*form.Tag != "") {
-		conditions = append(conditions, block.TagEQ(*form.Tag))
-	}
 
 	//Calculate start and finish dates and add to the conditions if there is a date filter
 	if form.Year != nil {
@@ -191,8 +188,31 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 		conditions = append(conditions, block.CreationDateLT(finishDate))
 	}
 
-	// Get task of this period and their stats
+	conditionsWithTags := conditions
+	if (form.Tag != nil) && (*form.Tag != "") {
+		conditionsWithTags = append(conditions, block.TagEQ(*form.Tag))
+	}
+
+	//Get the tags existant on the period
 	blocks, err := s.DB.Block.Query().Where(block.And(conditions...)).All(ctx)
+	var blockTags []string = []string{}
+	for _, block := range blocks {
+		if block.FinishDate != nil {
+			tagAlreadyIncluded := false
+			for _, tag := range blockTags {
+				if tag == *block.Tag {
+					tagAlreadyIncluded = true
+					break
+				}
+			}
+
+			if block.Tag != nil && *block.Tag != "" && !tagAlreadyIncluded {
+				blockTags = append(blockTags, *block.Tag)
+			}
+		}
+	}
+	// Get task of this period and their stats
+	blocksWithTagsFilter, err := s.DB.Block.Query().Where(block.And(conditionsWithTags...)).All(ctx)
 	if err != nil {
 		return nil, err
 	}
@@ -220,13 +240,8 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 		weekInfo = make(map[int]utils.PeriodStats)
 	}
 
-	var blockTags []string = []string{}
-
-	for _, block := range blocks {
+	for _, block := range blocksWithTagsFilter {
 		if block.FinishDate != nil {
-			if block.Tag != nil && *block.Tag != "" {
-				blockTags = append(blockTags, *block.Tag)
-			}
 			blockWorkingTime := int(block.FinishDate.Sub(block.CreationDate).Seconds() - (float64(block.DistractionMinutes) / 60))
 			workingTime += blockWorkingTime
 			distractionTime += block.DistractionMinutes * 60
