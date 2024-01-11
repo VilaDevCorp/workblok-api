@@ -1,16 +1,16 @@
 Env: dev
 Dev:
-  CookieHost:  192.168.1.139
+  CookieHost:  192.168.1.142
   CookieSecure: false
   HttpOnly: false
-  CorsHost: http://192.168.1.139:3000
-  FrontUrl: http://192.168.1.139:3000
+  CorsHost: http://192.168.1.142:3000
+  FrontUrl: http://192.168.1.142:3000
 Prod:
-  CookieHost: workblok.com
+  CookieHost: workblokapp.com
   CookieSecure: true
   HttpOnly: true
-  CorsHost: https://workblok.com:3000
-  FrontUrl: https://workblok.com
+  CorsHost: https://workblokapp.com:3001
+  FrontUrl: https://workblokapp.com
 IP: 0.0.0.0
 Port: 8080
 JwtKey: workblok258SECRETkey
@@ -20,7 +20,7 @@ Mail:
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
 DB:
-  Port: 3307
+  Port: 3308
   Host: 127.0.0.1
   User: root
   Pass: 1234
