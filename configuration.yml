@@ -20,7 +20,7 @@ Mail:
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
 DB:
-  Port: 3308
+  Port: 3306
   Host: 127.0.0.1
   User: root
   Pass: 1234
