@@ -49,6 +49,7 @@ func SignUp(c *gin.Context) {
 }
 
 func CreateVerificationCode(c *gin.Context) {
+	conf := conf.Get()
 	var form verificationCode.CreateForm
 	err := c.ShouldBind(&form)
 	if err != nil {
@@ -58,16 +59,20 @@ func CreateVerificationCode(c *gin.Context) {
 	}
 	svc := svc.Get()
 	verificationCode, err := svc.VerificationCode.Create(c.Request.Context(), form)
-	hostUrl := conf.Get().Dev.FrontUrl
-	if conf.Get().Env == "prod" {
-		hostUrl = conf.Get().Prod.FrontUrl
+	hostUrl := conf.Dev.FrontUrl
+	if conf.Env == "prod" {
+		hostUrl = conf.Prod.FrontUrl
 	}
-	if verificationCode.Type == utils.VALIDATION_TYPE {
-		err = mail.SendMail(form.Email, "Validation code", fmt.Sprintf("You can access to this link to validate your account: %s/validate/%s/%s",
-			hostUrl, form.Email, verificationCode.Code))
-	} else if verificationCode.Type == utils.RECOVER_TYPE {
-		err = mail.SendMail(form.Email, "Password change code", fmt.Sprintf("You can access to this link to change your password: %s/reset-password/%s/%s",
-			hostUrl, form.Email, verificationCode.Code))
+	if conf.Mail.Enabled {
+		if verificationCode.Type == utils.VALIDATION_TYPE {
+			err = mail.SendMail(form.Email, conf.Mail.MailTypes.AccountActivation.Subject,
+				fmt.Sprintf(conf.Mail.MailTypes.AccountActivation.Body,
+					hostUrl, form.Email, verificationCode.Code))
+		} else if verificationCode.Type == utils.RECOVER_TYPE {
+			err = mail.SendMail(form.Email, conf.Mail.MailTypes.PasswordReset.Subject,
+				fmt.Sprintf(conf.Mail.MailTypes.PasswordReset.Body,
+					hostUrl, form.Email, verificationCode.Code))
+		}
 	}
 
 	if err != nil {

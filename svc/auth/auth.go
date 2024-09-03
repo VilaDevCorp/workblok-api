@@ -108,7 +108,7 @@ func (s *Store) SignUp(ctx context.Context, form SignUpForm) utils.HttpResponse 
 	codeStr := fmt.Sprintf("%06d", code)
 
 	_, err = s.DB.VerificationCode.Create().SetUserID(user.ID).SetExpireDate(expireDate).SetType(utils.VALIDATION_TYPE).SetCode(codeStr).SetValid(true).Save(ctx)
-	if err == nil {
+	if err == nil && conf.Get().Mail.Enabled {
 		hostUrl := conf.Get().Dev.FrontUrl
 		if conf.Get().Env == "prod" {
 			hostUrl = conf.Get().Prod.FrontUrl

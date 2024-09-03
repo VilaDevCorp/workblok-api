@@ -6,22 +6,29 @@ Dev:
   CorsHost: http://192.168.1.142:3000
   FrontUrl: http://192.168.1.142:3000
 Prod:
-  CookieHost: workblokapp.com
+  CookieHost: workblok.dviladev.com
   CookieSecure: true
   HttpOnly: true
-  CorsHost: https://workblokapp.com:3001
-  FrontUrl: https://workblokapp.com
+  CorsHost: https://workblok.dviladev.com:3001
+  FrontUrl: https://workblok.dviladev.com
 IP: 0.0.0.0
 Port: 8080
-JwtKey: workblok258SECRETkey
+JwtKey: workbloksecret
 Mail:
-  User: workblokapp@gmail.com
-  Pass: qsgy ufir hoii spst
+  User: viladevapps@gmail.com
   SmtpHost: smtp.gmail.com
   SmtpPort: 587
+  Enabled: true
+  MailTypes:
+    AccountActivation:
+      Subject: Account activation
+      Body: "You can access to this link to validate your Workblok account: %s/validate/%s/%s"
+    PasswordReset:
+      Subject: Password reset
+      Body: "You can access to this link to change the password of your Workblok account: %s/reset-password/%s/%s"
 DB:
   Port: 3306
   Host: db
   User: root
-  Pass: .work137BLOK.
+  Pass: 123456
   DB: workblok

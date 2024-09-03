@@ -1,5 +1,3 @@
-version: '3.3'
-
 services:
   db:
       image: mysql:8.0
@@ -9,10 +7,14 @@ services:
       volumes:
         - db-volume:/var/lib/mysql
       environment:
-        MYSQL_ROOT_PASSWORD: .work137BLOK.
+        MYSQL_ROOT_PASSWORD: ${DB_PASS}
         MYSQL_DATABASE: workblok
   api: 
     image: workblok-api:latest
+    environment:
+      DB_PASS: ${DB_PASS}
+      MAIL_PASS: ${MAIL_PASS}
+      JWT_SECRET: ${JWT_SECRET}
     restart: always
     ports:
       - "8081:8080"
