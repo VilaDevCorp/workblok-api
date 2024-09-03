@@ -1,0 +1,42 @@
+name: Main Pipeline
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+jobs:
+  avoid_conflicts:
+    runs-on: ubuntu-latest
+    permissions:
+      actions: write
+    steps:
+      - name: Cancel conflicting runs
+        uses: styfle/cancel-workflow-action@0.9.1
+        with:
+          access_token: ${{ github.token }}
+  deploy:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - name: Deploy to Contabo server
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.CONTABO_HOST }}
+          username: ${{ secrets.CONTABO_USERNAME }}
+          password: ${{ secrets.CONTABO_PASSWORD }}
+          port: 22
+          script: |
+            set -e
+            cd services/workblokapi
+            export PATH=$PATH:/usr/local/go/bin
+            git checkout main
+            git pull https://davilasanvilar:${{ secrets.GIT_PAT }}@github.com/VilaDevCorp/workblok-api.git
+            rm -rf ent
+            make ent
+            go mod tidy
+            docker build -t workblok-api .
+            docker-compose -f docker-compose-prod.yml up -d
