@@ -20,5 +20,5 @@ ent/
 
 # Go workspace file
 go.work
-
+.env
 configuration.yml
