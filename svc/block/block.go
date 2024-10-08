@@ -20,7 +20,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Svc interface {
+type BlockSvc interface {
 	Create(ctx context.Context, form CreateForm) (*ent.Block, error, int)
 	Update(ctx context.Context, form UpdateForm) (*ent.Block, error)
 	Finish(ctx context.Context, blockId uuid.UUID, isAuto bool) (*ent.Block, error)
@@ -31,17 +31,23 @@ type Svc interface {
 	Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, error)
 }
 
-type Store struct {
+type BlockSvcImpl struct {
 	DB *ent.Client
 }
 
-func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.Block, error, int) {
-	hasActiveBlock, _ := s.DB.Block.Query().Where(block.And(block.HasUserWith(user.IDEQ(form.UserId)), block.FinishDateIsNil())).Exist(ctx)
+func (s *BlockSvcImpl) Create(ctx context.Context, form CreateForm) (*ent.Block, error, int) {
+	hasActiveBlock, _ := s.DB.Block.Query().
+		Where(block.And(block.HasUserWith(user.IDEQ(form.UserId)), block.FinishDateIsNil())).
+		Exist(ctx)
 
 	if hasActiveBlock {
 		return nil, nil, http.StatusConflict
 	}
-	createdBlock, err := s.DB.Block.Create().SetTargetMinutes(form.TargetMinutes).SetUserID(form.UserId).SetTag(form.Tag).Save(ctx)
+	createdBlock, err := s.DB.Block.Create().
+		SetTargetMinutes(form.TargetMinutes).
+		SetUserID(form.UserId).
+		SetTag(form.Tag).
+		Save(ctx)
 	if err != nil {
 		return nil, err, http.StatusInternalServerError
 	}
@@ -49,7 +55,7 @@ func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.Block, error,
 
 }
 
-func (s *Store) Update(ctx context.Context, form UpdateForm) (*ent.Block, error) {
+func (s *BlockSvcImpl) Update(ctx context.Context, form UpdateForm) (*ent.Block, error) {
 	update := s.DB.Block.UpdateOneID(form.BlockId)
 	if form.DistractionMinutes != nil {
 		update.SetDistractionMinutes(*form.DistractionMinutes)
@@ -57,7 +63,11 @@ func (s *Store) Update(ctx context.Context, form UpdateForm) (*ent.Block, error)
 	return update.Save(ctx)
 }
 
-func (s *Store) Finish(ctx context.Context, blockId uuid.UUID, isAuto bool) (*ent.Block, error) {
+func (s *BlockSvcImpl) Finish(
+	ctx context.Context,
+	blockId uuid.UUID,
+	isAuto bool,
+) (*ent.Block, error) {
 	update := s.DB.Block.UpdateOneID(blockId)
 
 	finishTime := time.Now()
@@ -78,7 +88,9 @@ func (s *Store) Finish(ctx context.Context, blockId uuid.UUID, isAuto bool) (*en
 			if conf.TimeLimit != nil {
 				timeLimit = *conf.TimeLimit
 			}
-			finishTime = block.CreationDate.Add(time.Duration(timeLimit+block.DistractionMinutes) * time.Minute)
+			finishTime = block.CreationDate.Add(
+				time.Duration(timeLimit+block.DistractionMinutes) * time.Minute,
+			)
 
 		} else {
 			finishTime = block.CreationDate.Add(time.Duration(block.TargetMinutes+block.DistractionMinutes) * time.Minute)
@@ -88,15 +100,17 @@ func (s *Store) Finish(ctx context.Context, blockId uuid.UUID, isAuto bool) (*en
 	return update.Save(ctx)
 }
 
-func (s *Store) Get(ctx context.Context, blockId uuid.UUID) (*ent.Block, error) {
+func (s *BlockSvcImpl) Get(ctx context.Context, blockId uuid.UUID) (*ent.Block, error) {
 	return s.DB.Block.Query().WithUser().Where(block.IDEQ(blockId)).Only(ctx)
 }
 
-func (s *Store) GetActive(ctx context.Context, userId uuid.UUID) (*ent.Block, error) {
-	return s.DB.Block.Query().Where(block.HasUserWith(user.IDEQ(userId)), block.FinishDateIsNil()).First(ctx)
+func (s *BlockSvcImpl) GetActive(ctx context.Context, userId uuid.UUID) (*ent.Block, error) {
+	return s.DB.Block.Query().
+		Where(block.HasUserWith(user.IDEQ(userId)), block.FinishDateIsNil()).
+		First(ctx)
 }
 
-func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error) {
+func (s *BlockSvcImpl) Search(ctx context.Context, form SearchForm) (*utils.Page, error) {
 	query := s.DB.Block.Query()
 	var conditions []predicate.Block
 
@@ -119,14 +133,22 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 
 	if form.CreationDate != nil {
 		startedNextDayMoment := form.CreationDate.AddDate(0, 0, 1)
-		conditions = append(conditions, block.CreationDateGTE(*form.CreationDate), block.CreationDateLT(startedNextDayMoment))
+		conditions = append(
+			conditions,
+			block.CreationDateGTE(*form.CreationDate),
+			block.CreationDateLT(startedNextDayMoment),
+		)
 	}
 
 	totalRows, err := query.Where(block.And(conditions...)).Count(ctx)
 	var content []*ent.Block
 	content, err = nil, nil
 	if limit > 0 {
-		content, err = query.Where(block.And(conditions...)).Offset(offset).Limit(limit).Order(block.ByCreationDate(sql.OrderDesc())).All(ctx)
+		content, err = query.Where(block.And(conditions...)).
+			Offset(offset).
+			Limit(limit).
+			Order(block.ByCreationDate(sql.OrderDesc())).
+			All(ctx)
 	} else {
 		content, err = query.Where(block.And(conditions...)).Order(block.ByCreationDate(sql.OrderDesc())).All(ctx)
 	}
@@ -138,12 +160,12 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	return &page, err
 }
 
-func (s *Store) Delete(ctx context.Context, blockIds []uuid.UUID) error {
+func (s *BlockSvcImpl) Delete(ctx context.Context, blockIds []uuid.UUID) error {
 	_, err := s.DB.Block.Delete().Where(block.IDIn(blockIds...)).Exec(ctx)
 	return err
 }
 
-func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, error) {
+func (s *BlockSvcImpl) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, error) {
 	var startDate time.Time
 	var finishDate time.Time
 	var nWeeks int
@@ -242,7 +264,11 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 
 	for _, block := range blocksWithTagsFilter {
 		if block.FinishDate != nil {
-			blockWorkingTime := int(block.FinishDate.Sub(block.CreationDate).Seconds() - (float64(block.DistractionMinutes) / 60))
+			blockWorkingTime := int(
+				block.FinishDate.Sub(block.CreationDate).
+					Seconds() -
+					(float64(block.DistractionMinutes) / 60),
+			)
 			workingTime += blockWorkingTime
 			distractionTime += block.DistractionMinutes * 60
 
@@ -259,13 +285,29 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 					startWeekDate := block.CreationDate.AddDate(0, 0, -(dayOffset))
 					startWeekMonth = startWeekDate.Month()
 				}
-				monthWorkingTime := yearInfo[int(startWeekMonth)].WorkingTime + float64(blockWorkingTime)/3600
-				monthDistractionTime := yearInfo[int(startWeekMonth)].DistractionTime + float64(block.DistractionMinutes)/60
-				yearInfo[int(startWeekMonth)] = utils.PeriodStats{WorkingTime: monthWorkingTime, DistractionTime: monthDistractionTime}
+				monthWorkingTime := yearInfo[int(startWeekMonth)].WorkingTime + float64(
+					blockWorkingTime,
+				)/3600
+				monthDistractionTime := yearInfo[int(startWeekMonth)].DistractionTime + float64(
+					block.DistractionMinutes,
+				)/60
+				yearInfo[int(startWeekMonth)] = utils.PeriodStats{
+					WorkingTime:     monthWorkingTime,
+					DistractionTime: monthDistractionTime,
+				}
 			}
 			if monthView {
 				//We calculate the start of the week of the block
-				startWeekDate := time.Date(block.CreationDate.Year(), block.CreationDate.Month(), block.CreationDate.Day(), 0, 0, 0, 0, block.CreationDate.Location())
+				startWeekDate := time.Date(
+					block.CreationDate.Year(),
+					block.CreationDate.Month(),
+					block.CreationDate.Day(),
+					0,
+					0,
+					0,
+					0,
+					block.CreationDate.Location(),
+				)
 				if block.CreationDate.Weekday() != 1 {
 					dayOffset := 6                         //If its sunday
 					if block.CreationDate.Weekday() != 0 { //If its not sunday
@@ -283,9 +325,16 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 					auxDate = auxDate.AddDate(0, 0, 7)
 					weekNumber++
 				}
-				monthWorkingTime := monthInfo[int(weekNumber)].WorkingTime + float64(blockWorkingTime)/3600
-				monthDistractionTime := monthInfo[int(weekNumber)].DistractionTime + float64(block.DistractionMinutes)/60
-				monthInfo[int(weekNumber)] = utils.PeriodStats{WorkingTime: monthWorkingTime, DistractionTime: monthDistractionTime}
+				monthWorkingTime := monthInfo[int(weekNumber)].WorkingTime + float64(
+					blockWorkingTime,
+				)/3600
+				monthDistractionTime := monthInfo[int(weekNumber)].DistractionTime + float64(
+					block.DistractionMinutes,
+				)/60
+				monthInfo[int(weekNumber)] = utils.PeriodStats{
+					WorkingTime:     monthWorkingTime,
+					DistractionTime: monthDistractionTime,
+				}
 			}
 			if weekView {
 				var nWeekDay = block.CreationDate.Weekday()
@@ -293,9 +342,16 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 				if nWeekDay == 0 {
 					nWeekDay = 7
 				}
-				dayWorkingTime := weekInfo[int(nWeekDay)].WorkingTime + float64(blockWorkingTime)/3600
-				dayDistractionTime := weekInfo[int(nWeekDay)].DistractionTime + float64(block.DistractionMinutes)/60
-				weekInfo[int(nWeekDay)] = utils.PeriodStats{WorkingTime: dayWorkingTime, DistractionTime: dayDistractionTime}
+				dayWorkingTime := weekInfo[int(nWeekDay)].WorkingTime + float64(
+					blockWorkingTime,
+				)/3600
+				dayDistractionTime := weekInfo[int(nWeekDay)].DistractionTime + float64(
+					block.DistractionMinutes,
+				)/60
+				weekInfo[int(nWeekDay)] = utils.PeriodStats{
+					WorkingTime:     dayWorkingTime,
+					DistractionTime: dayDistractionTime,
+				}
 			}
 
 		}
@@ -305,12 +361,27 @@ func (s *Store) Stats(ctx context.Context, form StatsForm) (*utils.StatsResult, 
 		periodDays := int(finishDate.Sub(startDate).Hours() / 24)
 		dailyAvgWorkingTime = new(int)
 		dailyAvgDistractionTime = new(int)
-		*dailyAvgWorkingTime = workingTime / periodDays
-		*dailyAvgDistractionTime = distractionTime / periodDays
+		*dailyAvgWorkingTime = workingTime
+		*dailyAvgDistractionTime = distractionTime
+		if periodDays != 0 {
+			*dailyAvgWorkingTime = workingTime / periodDays
+			*dailyAvgDistractionTime = distractionTime / periodDays
+		}
 	}
 
-	result := utils.StatsResult{WorkingTime: workingTime, DistractionTime: distractionTime, DailyAvgWorkingTime: dailyAvgWorkingTime, DailyAvgDistractionTime: dailyAvgDistractionTime,
-		YearInfo: &yearInfo, MonthInfo: &monthInfo, WeekInfo: &weekInfo, RealStartDate: startDate.Format("2006-01-02"), RealFinishDate: finishDate.Format("2006-01-02"), NWeeksOfMonth: nWeeks, Tags: &blockTags}
+	result := utils.StatsResult{
+		WorkingTime:             workingTime,
+		DistractionTime:         distractionTime,
+		DailyAvgWorkingTime:     dailyAvgWorkingTime,
+		DailyAvgDistractionTime: dailyAvgDistractionTime,
+		YearInfo:                &yearInfo,
+		MonthInfo:               &monthInfo,
+		WeekInfo:                &weekInfo,
+		RealStartDate:           startDate.Format("2006-01-02"),
+		RealFinishDate:          finishDate.Format("2006-01-02"),
+		NWeeksOfMonth:           nWeeks,
+		Tags:                    &blockTags,
+	}
 
 	return &result, nil
 }

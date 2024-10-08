@@ -31,7 +31,7 @@ func (VerificationCode) Fields() []ent.Field {
 		field.String("type").NotEmpty(),
 		field.String("code").NotEmpty(),
 		field.Time("expireDate").StorageKey("expire_date"),
-		field.Bool("valid"),
+		field.Bool("valid").Default(true),
 	}
 }
 

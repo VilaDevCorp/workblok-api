@@ -9,10 +9,10 @@ import (
 )
 
 type Service struct {
-	Block            block.Svc
-	User             user.Svc
-	Auth             auth.Svc
-	VerificationCode verificationCode.Svc
+	Block            block.BlockSvc
+	User             user.UserSvc
+	Auth             auth.AuthSvc
+	VerificationCode verificationCode.VerificationCodeSvc
 }
 
 var svc Service
@@ -24,9 +24,12 @@ func Get() *Service {
 func Setup() {
 	client := db.GetClient()
 	svc = Service{
-		Block:            &block.Store{DB: client},
-		User:             &user.Store{DB: client},
-		Auth:             &auth.Store{DB: client},
-		VerificationCode: &verificationCode.Store{DB: client},
+		Block: &block.BlockSvcImpl{DB: client},
+		User:  &user.UserSvcImpl{DB: client},
+		Auth: &auth.AuthSvcImpl{
+			DB:                  client,
+			VerificationCodeSvc: &verificationCode.VerificationCodeSvcImpl{DB: client},
+		},
+		VerificationCode: &verificationCode.VerificationCodeSvcImpl{DB: client},
 	}
 }

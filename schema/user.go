@@ -36,9 +36,15 @@ func (User) Fields() []ent.Field {
 		field.String("Username").Unique().NotEmpty().StructTag(`json:"username"`),
 		field.String("Email").Unique().NotEmpty().StructTag(`json:"email"`),
 		field.String("Password").NotEmpty().StructTag(`json:"-"`),
-		field.Bool("EmailValid").StorageKey("email_valid").Default(false).StructTag(`json:"emailValid"`),
+		field.Bool("EmailValid").
+			StorageKey("email_valid").
+			Default(false).
+			StructTag(`json:"emailValid"`),
 		field.JSON("Config", &Config{}).StructTag(`json:"config"`),
-		field.Bool("TutorialCompleted").StorageKey("tutorial_completed").Default(false).StructTag(`json:"tutorialCompleted"`),
+		field.Bool("TutorialCompleted").
+			StorageKey("tutorial_completed").
+			Default(false).
+			StructTag(`json:"tutorialCompleted"`),
 	}
 }
 
@@ -47,5 +53,6 @@ func (User) Edges() []ent.Edge {
 	return []ent.Edge{
 		edge.To("blocks", Block.Type),
 		edge.To("codes", VerificationCode.Type),
+		edge.To("sessions", Session.Type),
 	}
 }

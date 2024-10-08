@@ -11,7 +11,7 @@ import (
 	"github.com/google/uuid"
 )
 
-type Svc interface {
+type UserSvc interface {
 	Create(ctx context.Context, form CreateForm) (*ent.User, error)
 	Update(ctx context.Context, form ConfigForm) (*ent.User, error)
 	CompleteTutorial(ctx context.Context, userId uuid.UUID) error
@@ -20,15 +20,19 @@ type Svc interface {
 	Delete(ctx context.Context, userId uuid.UUID) error
 }
 
-type Store struct {
+type UserSvcImpl struct {
 	DB *ent.Client
 }
 
-func (s *Store) Create(ctx context.Context, form CreateForm) (*ent.User, error) {
-	return s.DB.User.Create().SetUsername(form.UserName).SetPassword(form.Password).SetEmail(form.Email).Save(ctx)
+func (s *UserSvcImpl) Create(ctx context.Context, form CreateForm) (*ent.User, error) {
+	return s.DB.User.Create().
+		SetUsername(form.UserName).
+		SetPassword(form.Password).
+		SetEmail(form.Email).
+		Save(ctx)
 }
 
-func (s *Store) Update(ctx context.Context, form ConfigForm) (*ent.User, error) {
+func (s *UserSvcImpl) Update(ctx context.Context, form ConfigForm) (*ent.User, error) {
 	update := s.DB.User.UpdateOneID(*form.Id)
 	if form.Conf != nil {
 		update.SetConfig(form.Conf)
@@ -36,18 +40,18 @@ func (s *Store) Update(ctx context.Context, form ConfigForm) (*ent.User, error) 
 	return update.Save(ctx)
 }
 
-func (s *Store) CompleteTutorial(ctx context.Context, userId uuid.UUID) error {
+func (s *UserSvcImpl) CompleteTutorial(ctx context.Context, userId uuid.UUID) error {
 	update := s.DB.User.UpdateOneID(userId)
 	update.SetTutorialCompleted(true)
 	_, error := update.Save(ctx)
 	return error
 }
 
-func (s *Store) Get(ctx context.Context, userId uuid.UUID) (*ent.User, error) {
+func (s *UserSvcImpl) Get(ctx context.Context, userId uuid.UUID) (*ent.User, error) {
 	return s.DB.User.Get(ctx, userId)
 }
 
-func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error) {
+func (s *UserSvcImpl) Search(ctx context.Context, form SearchForm) (*utils.Page, error) {
 	query := s.DB.User.Query()
 	var conditions []predicate.User
 
@@ -73,7 +77,7 @@ func (s *Store) Search(ctx context.Context, form SearchForm) (*utils.Page, error
 	return &page, err
 }
 
-func (s *Store) Delete(ctx context.Context, userId uuid.UUID) error {
+func (s *UserSvcImpl) Delete(ctx context.Context, userId uuid.UUID) error {
 	err := s.DB.User.DeleteOneID(userId).Exec(ctx)
 	return err
 }
