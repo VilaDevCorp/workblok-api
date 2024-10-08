@@ -2,13 +2,13 @@ Env: prod
 Dev:
   CookieHost:  192.168.1.142
   CookieSecure: false
-  HttpOnly: false
   CorsHost: http://192.168.1.142:3000
   FrontUrl: http://192.168.1.142:3000
+  CookieHttpOnly: true
 Prod:
   CookieHost: workblok.dviladev.com
   CookieSecure: true
-  HttpOnly: true
+  CookieHttpOnly: true
   CorsHost: https://workblok.dviladev.com:3001
   FrontUrl: https://workblok.dviladev.com
 IP: 0.0.0.0
